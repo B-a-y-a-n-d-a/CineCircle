@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineCircle — API Test Page</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#0b0e1a;color:#eef0f8;max-width:760px;margin:0 auto;padding:30px 20px}
+  h1 span{color:#e23636}
+  p{color:#9aa3c0;line-height:1.6}
+  button{background:#e23636;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;margin:4px 6px 4px 0}
+  input{background:#1c2340;border:1px solid #2a3355;border-radius:8px;color:#eef0f8;padding:10px;margin-right:6px}
+  pre{background:#141930;border:1px solid #232b4d;border-radius:10px;padding:16px;overflow-x:auto;font-size:.8rem;white-space:pre-wrap}
+</style>
+</head>
+<body>
+  <h1>Cine<span>Circle</span> API test page</h1>
+  <p>This placeholder proves your backend works. Replace everything in <code>public/</code> with your Google Stitch UI — see <code>docs/STITCH_PROMPT.md</code> for the prompt and <code>docs/API.md</code> for wiring.</p>
+
+  <div>
+    <input id="name" placeholder="Your name">
+    <button onclick="call('POST','/api/users',{name:document.getElementById('name').value})">Create user</button>
+  </div>
+  <button onclick="call('GET','/api/health')">Health check</button>
+  <button onclick="call('GET','/api/screenings')">Screenings</button>
+  <button onclick="call('GET','/api/groups')">Groups</button>
+  <button onclick="call('GET','/api/posts')">Posts</button>
+
+  <pre id="out">Click a button to call the API…</pre>
+
+<script>
+async function call(method, url, body){
+  const out=document.getElementById('out');
+  out.textContent='Loading…';
+  try{
+    const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    out.textContent=`${method} ${url} → ${res.status}\n\n`+JSON.stringify(await res.json(),null,2);
+  }catch(e){out.textContent='Error: '+e.message}
+}
+</script>
+</body>
+</html>
