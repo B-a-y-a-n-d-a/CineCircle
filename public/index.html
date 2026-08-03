@@ -9,15 +9,24 @@
 <script src="js/app.js"></script>
 <script>
   // Route to the right screen: no session -> login, session but no display
-  // name saved yet -> welcome, otherwise straight into the app.
+  // name saved yet (checked locally, then against the server for other
+  // devices/browsers) -> welcome, otherwise straight into the app.
   (async () => {
     const session = await CineCircleAuth.getSession();
     if (!session) {
       window.location.href = 'login.html';
-    } else if (!CineCircle.getUser()) {
-      window.location.href = 'welcome.html';
-    } else {
+      return;
+    }
+    if (CineCircle.getUser()) {
       window.location.href = 'watch_groups.html';
+      return;
+    }
+    const existing = await CineCircle.fetchExistingProfile(session.user.id);
+    if (existing) {
+      CineCircle.setUser(existing);
+      window.location.href = 'watch_groups.html';
+    } else {
+      window.location.href = 'welcome.html';
     }
   })();
 </script>

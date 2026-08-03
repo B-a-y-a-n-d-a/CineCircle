@@ -50,6 +50,16 @@
     return session;
   }
 
+  // Looks up a profile already saved for this auth_id (e.g. on a new device/
+  // browser where localStorage is empty). Returns null if none exists yet.
+  async function fetchExistingProfile(authId) {
+    try {
+      return await api(`/users/me?auth_id=${encodeURIComponent(authId)}`);
+    } catch {
+      return null;
+    }
+  }
+
   async function signOut() {
     if (window.CineCircleAuth) await window.CineCircleAuth.signOut();
     clearUser();
@@ -149,5 +159,5 @@
     });
   }
 
-  window.CineCircle = { api, getUser, setUser, clearUser, requireUser, requireSession, signOut, initials, timeAgo, escapeHtml, wireUserChip };
+  window.CineCircle = { api, getUser, setUser, clearUser, requireUser, requireSession, fetchExistingProfile, signOut, initials, timeAgo, escapeHtml, wireUserChip };
 })();

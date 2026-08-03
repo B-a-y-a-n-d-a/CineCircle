@@ -222,13 +222,21 @@
             session = await CineCircle.requireSession();
             if (!session) return;
 
-            // Already picked a display name before? Skip straight to the app.
-            if (CineCircle.getUser()) {
+            // Already picked a display name before — either on this device (cached
+            // locally) or on another one (saved server-side)? Skip straight to the app.
+            const cached = CineCircle.getUser();
+            if (cached) {
+                window.location.href = 'watch_groups.html';
+                return;
+            }
+            const existing = await CineCircle.fetchExistingProfile(session.user.id);
+            if (existing) {
+                CineCircle.setUser(existing);
                 window.location.href = 'watch_groups.html';
                 return;
             }
 
-            // Google sign-ins carry a name — pre-fill it so they can just hit Continue.
+            // First time here — Google sign-ins carry a name, pre-fill it so they can just hit Continue.
             const googleName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
             if (googleName) inputField.value = googleName;
         })();

@@ -63,36 +63,69 @@
 
 <main class="mt-[96px] flex-grow max-w-2xl mx-auto w-full px-container-margin pb-section-padding">
 <h1 class="font-headline-lg text-headline-lg mb-2">Settings</h1>
-<p class="text-on-surface-variant mb-10">Update your display name, email, or password.</p>
+<p class="text-on-surface-variant mb-10">Choose what you'd like to update.</p>
 
-<!-- Display name -->
-<section class="glass-card rounded-2xl p-6 mb-6">
-<h2 class="font-title-md text-title-md mb-1">Display Name</h2>
-<p class="text-on-surface-variant text-sm mb-4">This is what other cinephiles see on your groups and posts.</p>
+<div class="glass-card rounded-2xl overflow-hidden mb-6" id="settings-accordion">
+
+<!-- Display name row -->
+<div class="border-b border-white/5">
+<button class="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-white/5 transition-colors" data-toggle="name">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">badge</span>
+<div>
+<div class="font-title-md text-title-md">Display Name</div>
+<div class="text-on-surface-variant text-sm" id="name-preview">—</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" data-chevron="name">expand_more</span>
+</button>
+<div class="hidden px-5 pb-5" data-panel="name">
 <div class="flex flex-col sm:flex-row gap-3">
 <input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="name-input" placeholder="Your display name" type="text"/>
 <button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95 whitespace-nowrap" id="name-save">Save Name</button>
 </div>
 <p class="text-error text-sm hidden mt-3" id="name-error"></p>
 <p class="text-secondary text-sm hidden mt-3" id="name-success"></p>
-</section>
+</div>
+</div>
 
-<!-- Email -->
-<section class="glass-card rounded-2xl p-6 mb-6">
-<h2 class="font-title-md text-title-md mb-1">Email Address</h2>
-<p class="text-on-surface-variant text-sm mb-4">We'll send a confirmation link to your new address before the change takes effect.</p>
+<!-- Email row -->
+<div class="border-b border-white/5">
+<button class="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-white/5 transition-colors" data-toggle="email">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">mail</span>
+<div>
+<div class="font-title-md text-title-md">Email Address</div>
+<div class="text-on-surface-variant text-sm" id="email-preview">—</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" data-chevron="email">expand_more</span>
+</button>
+<div class="hidden px-5 pb-5" data-panel="email">
+<p class="text-on-surface-variant text-sm mb-3">We'll send a confirmation link to your new address before the change takes effect.</p>
 <div class="flex flex-col sm:flex-row gap-3">
 <input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="email-input" placeholder="you@example.com" type="email"/>
 <button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95 whitespace-nowrap" id="email-save">Save Email</button>
 </div>
 <p class="text-error text-sm hidden mt-3" id="email-error"></p>
 <p class="text-secondary text-sm hidden mt-3" id="email-success"></p>
-</section>
+</div>
+</div>
 
-<!-- Password -->
-<section class="glass-card rounded-2xl p-6 mb-6">
-<h2 class="font-title-md text-title-md mb-1">Password</h2>
-<p class="text-on-surface-variant text-sm mb-4">Choose a new password (at least 6 characters). If you signed in with Google, this sets a password you can also use to sign in directly.</p>
+<!-- Password row -->
+<div>
+<button class="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-white/5 transition-colors" data-toggle="password">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">lock</span>
+<div>
+<div class="font-title-md text-title-md">Password</div>
+<div class="text-on-surface-variant text-sm">••••••••</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" data-chevron="password">expand_more</span>
+</button>
+<div class="hidden px-5 pb-5" data-panel="password">
+<p class="text-on-surface-variant text-sm mb-3">At least 6 characters. If you signed in with Google, this also sets a password you can sign in with directly.</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="password-input" minlength="6" placeholder="New password" type="password"/>
 <input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="password-confirm" minlength="6" placeholder="Confirm new password" type="password"/>
@@ -100,7 +133,10 @@
 <button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="password-save">Update Password</button>
 <p class="text-error text-sm hidden mt-3" id="password-error"></p>
 <p class="text-secondary text-sm hidden mt-3" id="password-success"></p>
-</section>
+</div>
+</div>
+
+</div>
 
 <button class="w-full sm:w-auto px-6 py-3 rounded-lg border border-error/40 text-error font-semibold hover:bg-error-container/20 transition-all active:scale-95 flex items-center justify-center gap-2" id="logout-btn">
 <span class="material-symbols-outlined">logout</span> Log Out
@@ -120,6 +156,24 @@
     }
     function hideMsg(id) { document.getElementById(id).classList.add('hidden'); }
 
+    // Accordion: only one panel open at a time; click again to close it.
+    document.querySelectorAll('[data-toggle]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.toggle;
+            const panel = document.querySelector(`[data-panel="${key}"]`);
+            const chevron = document.querySelector(`[data-chevron="${key}"]`);
+            const isOpen = !panel.classList.contains('hidden');
+
+            document.querySelectorAll('[data-panel]').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('[data-chevron]').forEach(c => c.style.transform = 'rotate(0deg)');
+
+            if (!isOpen) {
+                panel.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        });
+    });
+
     document.getElementById('name-save').addEventListener('click', async () => {
         hideMsg('name-error'); hideMsg('name-success');
         const name = document.getElementById('name-input').value.trim();
@@ -131,6 +185,7 @@
                 body: { auth_id: session.user.id, email: session.user.email, name },
             });
             CineCircle.setUser(updated);
+            document.getElementById('name-preview').textContent = updated.name;
             showMsg('name-success', 'Display name updated.', false);
             CineCircle.wireUserChip();
         } catch (err) {
@@ -174,7 +229,9 @@
         const user = CineCircle.requireUser();
         if (!user) return;
         document.getElementById('name-input').value = user.name || '';
+        document.getElementById('name-preview').textContent = user.name || '—';
         document.getElementById('email-input').value = session.user.email || '';
+        document.getElementById('email-preview').textContent = session.user.email || '—';
         CineCircle.wireUserChip();
     })();
 </script>
