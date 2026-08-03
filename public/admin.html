@@ -54,6 +54,7 @@
 <button class="tab-btn active px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="requests" onclick="switchTab('requests')">Group Requests</button>
 <button class="tab-btn px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="movies" onclick="switchTab('movies')">Movies</button>
 <button class="tab-btn px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="users" onclick="switchTab('users')">Users</button>
+<button class="tab-btn px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="showtimes" onclick="switchTab('showtimes')">Showtimes</button>
 </div>
 
 <!-- Group Requests -->
@@ -84,6 +85,25 @@
 <div id="users-list" class="space-y-3"><p class="text-on-surface-variant">Loading…</p></div>
 </section>
 
+<!-- Showtimes -->
+<section class="hidden" id="tab-showtimes">
+<div class="glass-card rounded-2xl p-6 mb-6">
+<div class="flex items-center justify-between gap-4 flex-wrap">
+<div>
+<h2 class="font-title-md text-title-md mb-1">Scrape Ster-Kinekor &amp; Nu Metro</h2>
+<p class="text-on-surface-variant text-sm">Pulls today / tomorrow / day-after showtimes. Also runs automatically every 24 hours.</p>
+</div>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95 flex items-center gap-2" id="scrape-run-btn">
+<span class="material-symbols-outlined">refresh</span> Refresh Showtimes Now
+</button>
+</div>
+<p class="text-error text-sm hidden mt-3" id="scrape-error"></p>
+</div>
+<div class="glass-card rounded-2xl p-6" id="scrape-status">
+<p class="text-on-surface-variant">Loading status…</p>
+</div>
+</section>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -108,10 +128,11 @@
     const adminApi = (path, opts) => authedApi('/api/admin' + path, opts);
 
     function switchTab(tab) {
-        ['requests', 'movies', 'users'].forEach(t => {
+        ['requests', 'movies', 'users', 'showtimes'].forEach(t => {
             document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
             document.querySelector(`[data-tab="${t}"]`).classList.toggle('active', t === tab);
         });
+        if (tab === 'showtimes') loadScrapeStatus();
     }
 
     // ---- Group Requests ----
@@ -212,6 +233,57 @@
             await loadUsers();
         } catch (err) { alert(err.message); }
     }
+
+    // ---- Showtime scraper ----
+    let scrapePollTimer = null;
+
+    function renderScrapeStatus(status) {
+        const el = document.getElementById('scrape-status');
+        const btn = document.getElementById('scrape-run-btn');
+        btn.disabled = status.running;
+        btn.style.opacity = status.running ? '0.6' : '1';
+
+        if (status.running) {
+            el.innerHTML = '<p class="text-secondary flex items-center gap-2"><span class="material-symbols-outlined">hourglass_top</span> Scrape in progress — this can take a minute or two…</p>';
+            if (!scrapePollTimer) scrapePollTimer = setInterval(loadScrapeStatus, 4000);
+            return;
+        }
+        if (scrapePollTimer) { clearInterval(scrapePollTimer); scrapePollTimer = null; }
+
+        const run = status.lastRun;
+        if (!run) { el.innerHTML = '<p class="text-on-surface-variant">No scrape has run yet.</p>'; return; }
+
+        const when = new Date(run.finished_at || run.started_at).toLocaleString();
+        if (run.status === 'error') {
+            el.innerHTML = `<p class="text-error">Last run failed (${CineCircle.escapeHtml(when)}): ${CineCircle.escapeHtml(run.error || 'unknown error')}</p>`;
+        } else {
+            const unmatched = (run.unmatched_movies || []).length
+                ? `<p class="text-on-surface-variant text-sm mt-2">Seen on-site but not in our Movies list (add them, then re-run): ${run.unmatched_movies.map(CineCircle.escapeHtml).join(', ')}</p>`
+                : '';
+            el.innerHTML = `<p class="text-secondary">Last run: ${CineCircle.escapeHtml(when)} — found <b>${run.screenings_found}</b> screenings.</p>${unmatched}`;
+        }
+    }
+
+    async function loadScrapeStatus() {
+        try {
+            const status = await adminApi('/scrape/status');
+            renderScrapeStatus(status);
+        } catch (err) {
+            document.getElementById('scrape-status').innerHTML = `<p class="text-error">${CineCircle.escapeHtml(err.message)}</p>`;
+        }
+    }
+
+    document.getElementById('scrape-run-btn').addEventListener('click', async () => {
+        const errorEl = document.getElementById('scrape-error');
+        errorEl.classList.add('hidden');
+        try {
+            await adminApi('/scrape/run', { method: 'POST' });
+            await loadScrapeStatus();
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove('hidden');
+        }
+    });
 
     (async () => {
         const session = await CineCircle.requireSession();

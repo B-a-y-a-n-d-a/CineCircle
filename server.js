@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cron from 'node-cron';
 import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,6 +13,7 @@ import moviesRouter from './src/routes/movies.js';
 import groupChatRouter from './src/routes/groupChat.js';
 import pollsRouter from './src/routes/polls.js';
 import adminRouter from './src/routes/admin.js';
+import { runScrape } from './src/scraper/index.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +40,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || 'Server error' });
+});
+
+// Daily showtime scrape — runs every 24h at 03:00 server time while this
+// process is alive. Also triggerable on demand from Admin → Showtimes.
+cron.schedule('0 3 * * *', () => {
+  console.log('[scraper] daily cron run starting…');
+  runScrape().catch((err) => console.error('[scraper] daily cron run failed:', err));
 });
 
 const PORT = process.env.PORT || 3000;

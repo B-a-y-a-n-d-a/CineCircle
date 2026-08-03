@@ -55,6 +55,10 @@ docs/API.md          Full API reference for wiring the frontend
 docs/STITCH_PROMPT.md  Ready-to-paste prompt for Google Stitch
 ```
 
+## Showtime scraper (Ster-Kinekor + Nu Metro)
+
+See `docs/SCRAPER_SETUP.md` — daily automatic scrape + on-demand trigger from Admin → Showtimes. Requires `npx playwright install chromium` once, and a tuning pass against the live sites (no public API on either site).
+
 ## v2: multiple movies, group requests, chat/polls, admin
 
 See `docs/V2_FEATURES.md` — run `supabase/migration_v2.sql`, then make yourself an admin.
