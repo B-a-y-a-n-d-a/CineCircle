@@ -217,6 +217,9 @@
 <!-- Background Atmospheric Lighting Elements -->
 <div class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 <div class="fixed bottom-0 left-0 w-[500px] h-[500px] bg-secondary-container/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
         // Micro-interaction for form inputs
@@ -231,7 +234,7 @@
             });
         });
 
-        const user = CineCircle.requireUser();
+        let user;
         document.getElementById('cancel-btn').addEventListener('click', () => window.location.href = 'watch_groups.html');
         document.getElementById('close-btn').addEventListener('click', () => window.location.href = 'watch_groups.html');
 
@@ -280,9 +283,17 @@
             }
         });
 
-        CineCircle.wireUserChip();
-        loadScreenings().catch(err => {
-            document.getElementById('screening').innerHTML = `<option value="">Couldn't load screenings</option>`;
-        });
+        (async () => {
+            const session = await CineCircle.requireSession();
+            if (!session) return;
+            user = CineCircle.requireUser();
+            if (!user) return;
+            CineCircle.wireUserChip();
+            try {
+                await loadScreenings();
+            } catch (err) {
+                document.getElementById('screening').innerHTML = `<option value="">Couldn't load screenings</option>`;
+            }
+        })();
     </script>
 </body></html>

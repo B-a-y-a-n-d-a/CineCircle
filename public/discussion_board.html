@@ -192,10 +192,12 @@
 <p class="text-tertiary font-label-sm text-label-sm opacity-60">© 2024 CineCircle. For the love of cinema.</p>
 </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
-        const user = CineCircle.requireUser();
-        document.getElementById('composer-avatar').textContent = CineCircle.initials(user?.name);
+        let user;
 
         function revealSpoiler(container) {
             const overlay = container.querySelector('.spoiler-overlay');
@@ -281,10 +283,19 @@
             }
         });
 
-        CineCircle.wireUserChip();
-        loadFeed().catch(err => {
-            document.getElementById('feed').innerHTML =
-                `<p class="text-error text-center py-10">Couldn't load the discussion: ${CineCircle.escapeHtml(err.message)}</p>`;
-        });
+        (async () => {
+            const session = await CineCircle.requireSession();
+            if (!session) return;
+            user = CineCircle.requireUser();
+            if (!user) return;
+            document.getElementById('composer-avatar').textContent = CineCircle.initials(user?.name);
+            CineCircle.wireUserChip();
+            try {
+                await loadFeed();
+            } catch (err) {
+                document.getElementById('feed').innerHTML =
+                    `<p class="text-error text-center py-10">Couldn't load the discussion: ${CineCircle.escapeHtml(err.message)}</p>`;
+            }
+        })();
     </script>
 </body></html>

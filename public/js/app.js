@@ -37,6 +37,25 @@
     return user;
   }
 
+  // Call at the top of any protected page (before requireUser) to make sure
+  // there's still a real Supabase Auth session — not just a cached local profile.
+  // Requires supabase-config.js + supabase-client.js to be loaded first.
+  async function requireSession() {
+    const session = window.CineCircleAuth ? await window.CineCircleAuth.getSession() : null;
+    if (!session) {
+      clearUser();
+      window.location.href = 'login.html';
+      return null;
+    }
+    return session;
+  }
+
+  async function signOut() {
+    if (window.CineCircleAuth) await window.CineCircleAuth.signOut();
+    clearUser();
+    window.location.href = 'login.html';
+  }
+
   function initials(name) {
     return (name || '?').trim().slice(0, 2).toUpperCase();
   }
@@ -67,11 +86,10 @@
       el.style.justifyContent = 'center';
       el.style.fontWeight = '700';
       el.addEventListener('click', () => {
-        clearUser();
-        window.location.href = 'welcome.html';
+        if (confirm(`Signed in as ${user?.name || 'someone'}. Sign out?`)) signOut();
       });
     });
   }
 
-  window.CineCircle = { api, getUser, setUser, clearUser, requireUser, initials, timeAgo, escapeHtml, wireUserChip };
+  window.CineCircle = { api, getUser, setUser, clearUser, requireUser, requireSession, signOut, initials, timeAgo, escapeHtml, wireUserChip };
 })();

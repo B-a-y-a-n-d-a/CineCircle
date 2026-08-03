@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign in — CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .glass-morphism { backdrop-filter: blur(20px); background: rgba(22, 27, 48, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .glow-button:hover { box-shadow: 0 0 20px rgba(226, 54, 54, 0.4); }
+    .bg-pattern {
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .tab-btn.active { color: #ffb3ad; border-color: #ffb3ad; }
+</style>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: { extend: {
+            "colors": {
+                "surface": "#10131f", "surface-container-high": "#272936", "surface-variant": "#313442",
+                "tertiary": "#c6c6c7", "surface-container": "#1c1f2c", "tertiary-container": "#909191",
+                "on-secondary-fixed": "#00164d", "on-primary": "#680008", "on-primary-container": "#5c0006",
+                "surface-bright": "#363946", "secondary": "#b5c4ff", "tertiary-fixed": "#e2e2e2",
+                "on-background": "#e0e1f3", "error-container": "#93000a", "on-surface": "#e0e1f3",
+                "secondary-fixed": "#dce1ff", "outline-variant": "#5b403d", "inverse-primary": "#bb161f",
+                "primary": "#ffb3ad", "on-secondary-fixed-variant": "#234193", "on-error": "#690005",
+                "primary-fixed": "#ffdad6", "secondary-container": "#234193", "on-tertiary": "#2f3131",
+                "primary-fixed-dim": "#ffb3ad", "surface-container-low": "#181b27", "surface-dim": "#10131f",
+                "surface-container-lowest": "#0b0e1a", "surface-tint": "#ffb3ad", "on-tertiary-container": "#282a2a",
+                "on-surface-variant": "#e4bdba", "primary-container": "#ff544e", "on-primary-fixed": "#410003",
+                "inverse-surface": "#e0e1f3", "on-secondary": "#00297b", "surface-container-highest": "#313442",
+                "background": "#10131f", "on-error-container": "#ffdad6", "on-tertiary-fixed": "#1a1c1c",
+                "on-tertiary-fixed-variant": "#454747", "on-primary-fixed-variant": "#930010",
+                "secondary-fixed-dim": "#b5c4ff", "error": "#ffb4ab", "tertiary-fixed-dim": "#c6c6c7",
+                "inverse-on-surface": "#2d303d", "outline": "#ab8885", "on-secondary-container": "#9cb2ff"
+            },
+            "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            "spacing": { "card-gap": "20px", "container-margin": "24px", "gutter": "16px", "section-padding": "40px", "base": "8px" },
+            "fontFamily": {
+                "label-sm": ["Inter"], "display-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"],
+                "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+        } },
+    }
+</script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md overflow-hidden">
+<div class="fixed inset-0 bg-surface-container-lowest z-0">
+<div class="absolute inset-0 bg-pattern opacity-100"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+</div>
+<main class="relative z-10 flex-1 flex items-center justify-center px-container-margin py-10">
+<div class="max-w-md w-full">
+<div class="glass-morphism rounded-xl p-10 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+<div class="mb-6 flex items-center justify-center w-16 h-16 rounded-full bg-primary-container/10 border border-primary-container/20">
+<span class="material-symbols-outlined text-primary-container !text-4xl">movie</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-3 tracking-tight">Welcome to CineCircle</h1>
+<p class="font-body-md text-body-md text-tertiary-container mb-8 max-w-[280px]">Sign in to find your next watch party.</p>
+
+<button class="w-full flex items-center justify-center gap-3 bg-white text-surface font-bold py-3.5 rounded-lg hover:brightness-95 transition-all active:scale-95 mb-6" id="google-btn" type="button">
+<svg height="20" viewBox="0 0 48 48" width="20"><path d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v9h11.8c-.51 2.75-2.06 5.08-4.4 6.64v5.52h7.1c4.16-3.83 6.62-9.47 6.62-16.66z" fill="#4285F4"/><path d="M24 46c5.94 0 10.92-1.97 14.56-5.34l-7.1-5.52c-1.97 1.32-4.49 2.1-7.46 2.1-5.73 0-10.58-3.86-12.32-9.06H4.34v5.7C7.96 41.07 15.4 46 24 46z" fill="#34A853"/><path d="M11.68 28.18C11.24 26.86 11 25.45 11 24s.24-2.86.68-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.34-5.7z" fill="#FBBC05"/><path d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.34 5.7c1.74-5.2 6.59-9.07 12.32-9.07z" fill="#EA4335"/></svg>
+Continue with Google
+</button>
+
+<div class="w-full flex items-center gap-3 mb-6">
+<span class="flex-1 h-px bg-white/10"></span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">OR</span>
+<span class="flex-1 h-px bg-white/10"></span>
+</div>
+
+<div class="w-full flex border-b border-white/10 mb-6">
+<button class="tab-btn active flex-1 py-2 font-title-md text-title-md border-b-2 border-transparent text-on-surface-variant transition-colors" data-tab="signin" type="button">Sign In</button>
+<button class="tab-btn flex-1 py-2 font-title-md text-title-md border-b-2 border-transparent text-on-surface-variant transition-colors" data-tab="signup" type="button">Sign Up</button>
+</div>
+
+<form class="w-full space-y-4" id="auth-form">
+<div class="group relative text-left">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2 ml-1" for="email">Email</label>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3.5 text-on-surface placeholder:text-surface-variant focus:outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-all" id="email" placeholder="you@example.com" type="email"/>
+</div>
+<div class="group relative text-left">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2 ml-1" for="password">Password</label>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3.5 text-on-surface placeholder:text-surface-variant focus:outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-all" id="password" minlength="6" placeholder="••••••••" type="password"/>
+</div>
+<p class="text-error text-sm hidden text-left" id="auth-error"></p>
+<p class="text-secondary text-sm hidden text-left" id="auth-info"></p>
+<button class="glow-button w-full bg-primary-container text-on-primary-fixed font-title-md text-title-md py-4 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95" id="submit-btn" type="submit">
+<span id="submit-label">Sign In</span>
+<span class="material-symbols-outlined !text-lg">arrow_forward</span>
+</button>
+</form>
+<div class="mt-8">
+<span class="font-display-lg text-display-lg !text-xl font-extrabold text-primary tracking-tighter opacity-50">CineCircle</span>
+</div>
+</div>
+<p class="mt-6 text-center font-label-sm text-label-sm text-surface-variant px-4">
+By continuing, you agree to our <a class="text-tertiary hover:text-primary transition-colors underline decoration-primary/30" href="#">Community Guidelines</a>.
+</p>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+    let mode = 'signin';
+    const tabs = document.querySelectorAll('.tab-btn');
+    const submitLabel = document.getElementById('submit-label');
+    const errorEl = document.getElementById('auth-error');
+    const infoEl = document.getElementById('auth-info');
+    const submitBtn = document.getElementById('submit-btn');
+
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+        mode = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle('active', t === tab));
+        submitLabel.textContent = mode === 'signin' ? 'Sign In' : 'Create Account';
+        errorEl.classList.add('hidden');
+        infoEl.classList.add('hidden');
+    }));
+
+    // Already signed in? Skip straight past this screen.
+    CineCircleAuth.getSession().then(session => {
+        if (session) window.location.href = 'welcome.html';
+    });
+
+    document.getElementById('google-btn').addEventListener('click', async () => {
+        try {
+            await CineCircleAuth.signInWithGoogle();
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.classList.add('hidden');
+        infoEl.classList.add('hidden');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || password.length < 6) {
+            errorEl.textContent = 'Enter a valid email and a password of at least 6 characters.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        submitBtn.disabled = true;
+        try {
+            if (mode === 'signin') {
+                await CineCircleAuth.signInWithPassword(email, password);
+                window.location.href = 'welcome.html';
+            } else {
+                const data = await CineCircleAuth.signUpWithPassword(email, password);
+                if (data.session) {
+                    window.location.href = 'welcome.html';
+                } else {
+                    infoEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+                    infoEl.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                }
+            }
+        } catch (err) {
+            errorEl.textContent = err.message || 'Something went wrong.';
+            errorEl.classList.remove('hidden');
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+</body></html>

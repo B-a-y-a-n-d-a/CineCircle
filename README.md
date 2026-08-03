@@ -55,6 +55,10 @@ docs/API.md          Full API reference for wiring the frontend
 docs/STITCH_PROMPT.md  Ready-to-paste prompt for Google Stitch
 ```
 
+## Sign-in (email/password + Google)
+
+See `docs/AUTH_SETUP.md` for the full walkthrough — you'll need to run one more SQL migration, grab your anon/publishable key, and (for Google) create OAuth credentials in Google Cloud Console.
+
 ## Roadmap
 
 - Replace name-only login with Supabase Auth (email / magic link)

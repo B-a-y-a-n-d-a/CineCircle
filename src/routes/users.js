@@ -3,20 +3,22 @@ import { supabase } from '../supabase.js';
 
 const router = Router();
 
-// POST /api/users  { name }
-// MVP "login": creates the user if new, otherwise returns the existing one.
-// Upgrade path: replace with Supabase Auth (email/password or magic links).
+// POST /api/users  { auth_id, email, name }
+// Called after Supabase Auth sign-in (email/password or Google) to set/update
+// the display name on the row Supabase's `on_auth_user_created` trigger already
+// created for this auth_id. Upserts so it's safe to call more than once.
 router.post('/', async (req, res, next) => {
   try {
-    const name = (req.body.name || '').trim();
-    if (!name) return res.status(400).json({ error: 'name is required' });
-
-    const { data: existing } = await supabase
-      .from('users').select('*').ilike('name', name).maybeSingle();
-    if (existing) return res.json(existing);
+    const { auth_id, email, name } = req.body;
+    const trimmedName = (name || '').trim();
+    if (!auth_id) return res.status(400).json({ error: 'auth_id is required' });
+    if (!trimmedName) return res.status(400).json({ error: 'name is required' });
 
     const { data, error } = await supabase
-      .from('users').insert({ name }).select().single();
+      .from('users')
+      .upsert({ auth_id, email, name: trimmedName }, { onConflict: 'auth_id' })
+      .select()
+      .single();
     if (error) throw error;
     res.status(201).json(data);
   } catch (err) { next(err); }

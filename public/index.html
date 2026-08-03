@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=welcome.html">
 <title>CineCircle</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
-  // Send returning users straight into the app; new users to the name screen.
-  window.location.href = window.CineCircle && CineCircle.getUser() ? 'watch_groups.html' : 'welcome.html';
+  // Route to the right screen: no session -> login, session but no display
+  // name saved yet -> welcome, otherwise straight into the app.
+  (async () => {
+    const session = await CineCircleAuth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    } else if (!CineCircle.getUser()) {
+      window.location.href = 'welcome.html';
+    } else {
+      window.location.href = 'watch_groups.html';
+    }
+  })();
 </script>
 </head>
 <body></body>

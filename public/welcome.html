@@ -168,6 +168,9 @@
 </main>
 <!-- Footer Identity (Invisible on this specific transactional screen per mandate) -->
 <!-- The prompt requires a name entry screen, often a task-focused sub-page, so global nav is suppressed. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
         // Micro-interaction for input glow effect follow
@@ -182,15 +185,11 @@
             container.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
         });
 
-        // If we already know who this person is, skip straight to the app.
-        if (CineCircle.getUser()) {
-            window.location.href = 'watch_groups.html';
-        }
-
         const form = document.getElementById('name-form');
         const errorEl = document.getElementById('name-error');
         const submitBtn = document.getElementById('submit-btn');
         const submitLabel = document.getElementById('submit-label');
+        let session;
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -204,7 +203,10 @@
             submitBtn.disabled = true;
             submitLabel.textContent = 'Joining…';
             try {
-                const user = await CineCircle.api('/users', { method: 'POST', body: { name } });
+                const user = await CineCircle.api('/users', {
+                    method: 'POST',
+                    body: { auth_id: session.user.id, email: session.user.email, name },
+                });
                 CineCircle.setUser(user);
                 window.location.href = 'watch_groups.html';
             } catch (err) {
@@ -214,5 +216,21 @@
                 submitLabel.textContent = 'Continue';
             }
         });
+
+        (async () => {
+            // Must have a real Supabase session (email/password or Google) to be here.
+            session = await CineCircle.requireSession();
+            if (!session) return;
+
+            // Already picked a display name before? Skip straight to the app.
+            if (CineCircle.getUser()) {
+                window.location.href = 'watch_groups.html';
+                return;
+            }
+
+            // Google sign-ins carry a name — pre-fill it so they can just hit Continue.
+            const googleName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+            if (googleName) inputField.value = googleName;
+        })();
     </script>
 </body></html>
