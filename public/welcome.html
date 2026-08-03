@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Welcome to CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-morphism {
+            backdrop-filter: blur(20px);
+            background: rgba(22, 27, 48, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 20px rgba(226, 54, 54, 0.4);
+        }
+        /* Subtle pattern overlay from Design System */
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10131f",
+                        "surface-container-high": "#272936",
+                        "surface-variant": "#313442",
+                        "tertiary": "#c6c6c7",
+                        "surface-container": "#1c1f2c",
+                        "tertiary-container": "#909191",
+                        "on-secondary-fixed": "#00164d",
+                        "on-primary": "#680008",
+                        "on-primary-container": "#5c0006",
+                        "surface-bright": "#363946",
+                        "secondary": "#b5c4ff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-background": "#e0e1f3",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e1f3",
+                        "secondary-fixed": "#dce1ff",
+                        "outline-variant": "#5b403d",
+                        "inverse-primary": "#bb161f",
+                        "primary": "#ffb3ad",
+                        "on-secondary-fixed-variant": "#234193",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdad6",
+                        "secondary-container": "#234193",
+                        "on-tertiary": "#2f3131",
+                        "primary-fixed-dim": "#ffb3ad",
+                        "surface-container-low": "#181b27",
+                        "surface-dim": "#10131f",
+                        "surface-container-lowest": "#0b0e1a",
+                        "surface-tint": "#ffb3ad",
+                        "on-tertiary-container": "#282a2a",
+                        "on-surface-variant": "#e4bdba",
+                        "primary-container": "#ff544e",
+                        "on-primary-fixed": "#410003",
+                        "inverse-surface": "#e0e1f3",
+                        "on-secondary": "#00297b",
+                        "surface-container-highest": "#313442",
+                        "background": "#10131f",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-fixed-variant": "#930010",
+                        "secondary-fixed-dim": "#b5c4ff",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-on-surface": "#2d303d",
+                        "outline": "#ab8885",
+                        "on-secondary-container": "#9cb2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-gap": "20px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "section-padding": "40px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md overflow-hidden">
+<!-- Atmospheric Background Layers -->
+<div class="fixed inset-0 bg-surface-container-lowest z-0">
+<!-- The Background Shader -->
+
+<!-- Texture Overlay -->
+<div class="absolute inset-0 bg-pattern opacity-100"></div>
+<!-- Depth Vignette -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-10 flex-1 flex items-center justify-center px-container-margin">
+<div class="max-w-md w-full animate-in fade-in zoom-in duration-500">
+<!-- Modal Container -->
+<div class="glass-morphism rounded-xl p-10 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+<!-- Branding Icon -->
+<div class="mb-6 flex items-center justify-center w-16 h-16 rounded-full bg-primary-container/10 border border-primary-container/20">
+<span class="material-symbols-outlined text-primary-container !text-4xl" data-icon="movie">movie</span>
+</div>
+<!-- Heading Group -->
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-3 tracking-tight">
+                    Welcome to CineCircle
+                </h1>
+<p class="font-body-md text-body-md text-tertiary-container mb-10 max-w-[280px]">
+                    Please enter a display name to join the conversation.
+                </p>
+<!-- Form Section -->
+<form class="w-full space-y-6" id="name-form">
+<div class="group relative text-left">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2 ml-1" for="display_name">
+                            Display Name
+                        </label>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3.5 text-on-surface placeholder:text-surface-variant focus:outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-all" id="display_name" placeholder="e.g. CinemaLover99" type="text"/>
+<p class="mt-2 text-sm text-error hidden" id="name-error"></p>
+</div>
+<button class="glow-button w-full bg-primary-container text-on-primary-fixed font-title-md text-title-md py-4 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95" id="submit-btn" type="submit">
+                        <span id="submit-label">Continue</span>
+                        <span class="material-symbols-outlined !text-lg" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<!-- Subtle Footer Branding -->
+<div class="mt-8">
+<span class="font-display-lg text-display-lg !text-xl font-extrabold text-primary tracking-tighter opacity-50">CineCircle</span>
+</div>
+</div>
+<!-- Quick Help / Hint -->
+<p class="mt-6 text-center font-label-sm text-label-sm text-surface-variant px-4">
+                By continuing, you agree to our <a class="text-tertiary hover:text-primary transition-colors underline decoration-primary/30" href="#">Community Guidelines</a>.
+            </p>
+</div>
+</main>
+<!-- Footer Identity (Invisible on this specific transactional screen per mandate) -->
+<!-- The prompt requires a name entry screen, often a task-focused sub-page, so global nav is suppressed. -->
+<script src="js/app.js"></script>
+<script>
+        // Micro-interaction for input glow effect follow
+        const inputField = document.getElementById('display_name');
+        const container = inputField.closest('.glass-morphism');
+
+        inputField.addEventListener('focus', () => {
+            container.style.boxShadow = '0 0 40px rgba(226, 54, 54, 0.15)';
+        });
+
+        inputField.addEventListener('blur', () => {
+            container.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
+        });
+
+        // If we already know who this person is, skip straight to the app.
+        if (CineCircle.getUser()) {
+            window.location.href = 'watch_groups.html';
+        }
+
+        const form = document.getElementById('name-form');
+        const errorEl = document.getElementById('name-error');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitLabel = document.getElementById('submit-label');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = inputField.value.trim();
+            errorEl.classList.add('hidden');
+            if (!name) {
+                errorEl.textContent = 'Please enter a display name.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            submitBtn.disabled = true;
+            submitLabel.textContent = 'Joining…';
+            try {
+                const user = await CineCircle.api('/users', { method: 'POST', body: { name } });
+                CineCircle.setUser(user);
+                window.location.href = 'watch_groups.html';
+            } catch (err) {
+                errorEl.textContent = err.message || 'Something went wrong. Try again.';
+                errorEl.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitLabel.textContent = 'Continue';
+            }
+        });
+    </script>
+</body></html>

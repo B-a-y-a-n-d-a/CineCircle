@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Plans | CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(22, 27, 48, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 179, 173, 0.3);
+            box-shadow: 0 0 20px rgba(226, 54, 54, 0.1);
+            transform: translateY(-4px);
+        }
+        .cinema-gradient {
+            background: linear-gradient(to top, rgba(16, 19, 31, 1) 0%, rgba(16, 19, 31, 0.4) 50%, transparent 100%);
+        }
+        body {
+            background-color: #0b0e1a;
+            background-image: radial-gradient(circle at 50% -20%, #1c1f2c 0%, #0b0e1a 100%);
+            min-height: 100vh;
+        }
+        /* Subtle Pattern Overlay */
+        .pattern-bg::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.62 0H60v5.38L54.62 0zM4.62 0H0v4.62L4.62 0zm50.76 60H60v-5.38L55.38 60zm-50.76 0H0v-4.62L4.62 60zM30 34.62L34.62 30 30 25.38 25.38 30 30 34.62zm0-9.24L34.62 20 30 15.38 25.38 20 30 25.38zm0 18.48L34.62 40 30 35.38 25.38 40 30 44.62zM44.62 30L50 24.62 44.62 19.24 39.24 24.62 44.62 30zm-29.24 0L20 24.62 14.62 19.24 9.24 24.62 14.62 30zM30 4.62L34.62 0h-9.24L30 4.62zM30 55.38L25.38 60h9.24L30 55.38zM60 30l-4.62-4.62V34.62L60 30zM0 30l4.62 4.62V25.38L0 30z' fill='%23ffffff' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10131f",
+                        "surface-container-high": "#272936",
+                        "surface-variant": "#313442",
+                        "tertiary": "#c6c6c7",
+                        "surface-container": "#1c1f2c",
+                        "tertiary-container": "#909191",
+                        "on-secondary-fixed": "#00164d",
+                        "on-primary": "#680008",
+                        "on-primary-container": "#5c0006",
+                        "surface-bright": "#363946",
+                        "secondary": "#b5c4ff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-background": "#e0e1f3",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e1f3",
+                        "secondary-fixed": "#dce1ff",
+                        "outline-variant": "#5b403d",
+                        "inverse-primary": "#bb161f",
+                        "primary": "#ffb3ad",
+                        "on-secondary-fixed-variant": "#234193",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdad6",
+                        "secondary-container": "#234193",
+                        "on-tertiary": "#2f3131",
+                        "primary-fixed-dim": "#ffb3ad",
+                        "surface-container-low": "#181b27",
+                        "surface-dim": "#10131f",
+                        "surface-container-lowest": "#0b0e1a",
+                        "surface-tint": "#ffb3ad",
+                        "on-tertiary-container": "#282a2a",
+                        "on-surface-variant": "#e4bdba",
+                        "primary-container": "#ff544e",
+                        "on-primary-fixed": "#410003",
+                        "inverse-surface": "#e0e1f3",
+                        "on-secondary": "#00297b",
+                        "surface-container-highest": "#313442",
+                        "background": "#10131f",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-fixed-variant": "#930010",
+                        "secondary-fixed-dim": "#b5c4ff",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-on-surface": "#2d303d",
+                        "outline": "#ab8885",
+                        "on-secondary-container": "#9cb2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-gap": "20px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "section-padding": "40px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="pattern-bg overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 z-50 w-full bg-surface/60 backdrop-blur-md border-b border-white/10 shadow-[0_0_20px_rgba(226,54,54,0.1)]">
+<div class="max-w-7xl mx-auto px-container-margin py-4 flex justify-between items-center">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter cursor-pointer">CineCircle</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="watch_groups.html">Watch Groups</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="my_plans.html">My Plans</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="discussion_board.html">Discussion Board</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-white/10 rounded-full py-2 pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary-container transition-all w-64 font-body-md text-body-md" placeholder="Search films..." type="text"/>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container/30 hover:border-primary-container transition-colors bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+</div>
+</div>
+</nav>
+<main class="pt-32 pb-section-padding px-container-margin max-w-7xl mx-auto min-h-[calc(100vh-200px)]">
+<!-- Header Section -->
+<header class="mb-10">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">My Watch Groups</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Manage your active cinema circles and upcoming watch parties. Stay connected with your favorite film buffs.</p>
+</header>
+<!-- Dynamic Content Area -->
+<div id="content-canvas">
+<!-- Joined Groups Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-card-gap" id="joined-groups-grid">
+<p class="text-on-surface-variant col-span-full text-center py-10">Loading your plans…</p>
+</div>
+<!-- Empty State (Hidden by default) -->
+<div class="hidden flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500" id="empty-state">
+<div class="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-xl">
+<span class="material-symbols-outlined text-primary text-5xl">movie_filter</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-3">You haven't joined any groups yet!</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-md mx-auto">Discover communities of movie lovers, join watch parties, and share your passion for the silver screen.</p>
+<button class="bg-primary-container text-on-primary hover:scale-[1.02] active:scale-95 transition-all py-4 px-10 rounded-full font-bold shadow-[0_0_20px_rgba(226,54,54,0.2)] flex items-center gap-3" onclick="window.location.href='watch_groups.html'">
+<span class="material-symbols-outlined">explore</span>
+                    Browse Groups
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-10 mt-auto bg-surface-container-lowest border-t border-white/5">
+<div class="max-w-7xl mx-auto px-container-margin flex flex-col md:flex-row justify-between items-center">
+<div class="flex flex-col items-center md:items-start mb-6 md:mb-0">
+<span class="font-display-lg text-display-lg text-primary opacity-50 mb-2">CineCircle</span>
+<p class="font-label-sm text-label-sm text-secondary">© 2024 CineCircle. For the love of cinema.</p>
+</div>
+<div class="flex gap-8">
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Help Center</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">About Us</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-t border-white/10 px-4 py-3 flex justify-around items-center">
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">movie</span>
+<span class="text-[10px] font-bold">Discover</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] font-bold">Groups</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event</span>
+<span class="text-[10px] font-bold">Plans</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">forum</span>
+<span class="text-[10px] font-bold">Feed</span>
+</div>
+</nav>
+<script src="js/app.js"></script>
+<script>
+        const user = CineCircle.requireUser();
+
+        function planCard(g) {
+            return `<div class="glass-card rounded-xl overflow-hidden group/card relative">
+                <div class="h-32 relative overflow-hidden bg-gradient-to-br from-primary-container/30 to-secondary-container/30 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-5xl opacity-40">theater_comedy</span>
+                    <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+                        <span class="bg-primary/20 backdrop-blur-md border border-primary/30 text-primary px-3 py-1 rounded-full font-label-sm text-label-sm">${CineCircle.escapeHtml(g.vibe)}</span>
+                    </div>
+                </div>
+                <div class="p-5 flex flex-col gap-4">
+                    <div>
+                        <h3 class="font-title-md text-title-md text-on-surface mb-1">${CineCircle.escapeHtml(g.name)}</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">${CineCircle.escapeHtml(g.screening?.cinema || '')} — "${CineCircle.escapeHtml(g.topic)}"</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-on-surface-variant font-label-sm text-label-sm">
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">event</span>
+                            <span>${CineCircle.escapeHtml(g.screening?.show_time || '')}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">group</span>
+                            <span>${g.members.length} / ${g.max_size} Members</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-3 rounded-lg border-1.5 border-outline hover:bg-error-container/20 hover:border-error text-on-surface transition-all duration-300 font-label-sm text-label-sm flex items-center justify-center gap-2" onclick="leaveGroup('${g.id}')">
+                        <span class="material-symbols-outlined">logout</span>
+                        Leave Group
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function checkEmptyState(count) {
+            const grid = document.getElementById('joined-groups-grid');
+            const emptyState = document.getElementById('empty-state');
+            if (count === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+        }
+
+        async function leaveGroup(id) {
+            try {
+                await CineCircle.api(`/groups/${id}/leave`, { method: 'POST', body: { user_id: user.id } });
+                await loadPlans();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function loadPlans() {
+            const groups = await CineCircle.api('/groups');
+            const mine = groups.filter(g => g.members.some(m => m.id === user.id));
+            const grid = document.getElementById('joined-groups-grid');
+            grid.innerHTML = mine.map(planCard).join('');
+            checkEmptyState(mine.length);
+        }
+
+        CineCircle.wireUserChip();
+        loadPlans().catch(err => {
+            document.getElementById('joined-groups-grid').innerHTML =
+                `<p class="text-error col-span-full text-center py-10">Couldn't load your plans: ${CineCircle.escapeHtml(err.message)}</p>`;
+        });
+    </script>
+</body></html>

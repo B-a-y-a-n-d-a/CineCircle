@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Discussion Board | CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10131f",
+                        "surface-container-high": "#272936",
+                        "surface-variant": "#313442",
+                        "tertiary": "#c6c6c7",
+                        "surface-container": "#1c1f2c",
+                        "tertiary-container": "#909191",
+                        "on-secondary-fixed": "#00164d",
+                        "on-primary": "#680008",
+                        "on-primary-container": "#5c0006",
+                        "surface-bright": "#363946",
+                        "secondary": "#b5c4ff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-background": "#e0e1f3",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e1f3",
+                        "secondary-fixed": "#dce1ff",
+                        "outline-variant": "#5b403d",
+                        "inverse-primary": "#bb161f",
+                        "primary": "#ffb3ad",
+                        "on-secondary-fixed-variant": "#234193",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdad6",
+                        "secondary-container": "#234193",
+                        "on-tertiary": "#2f3131",
+                        "primary-fixed-dim": "#ffb3ad",
+                        "surface-container-low": "#181b27",
+                        "surface-dim": "#10131f",
+                        "surface-container-lowest": "#0b0e1a",
+                        "surface-tint": "#ffb3ad",
+                        "on-tertiary-container": "#282a2a",
+                        "on-surface-variant": "#e4bdba",
+                        "primary-container": "#ff544e",
+                        "on-primary-fixed": "#410003",
+                        "inverse-surface": "#e0e1f3",
+                        "on-secondary": "#00297b",
+                        "surface-container-highest": "#313442",
+                        "background": "#10131f",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-fixed-variant": "#930010",
+                        "secondary-fixed-dim": "#b5c4ff",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-on-surface": "#2d303d",
+                        "outline": "#ab8885",
+                        "on-secondary-container": "#9cb2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-gap": "20px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "section-padding": "40px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #10131f;
+            color: #e0e1f3;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(226, 54, 54, 0.05) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L30 60M0 30L60 30' fill='none' stroke='white' stroke-opacity='0.02' stroke-width='1'/%3E%3C/svg%3E");
+        }
+        .glass-panel {
+            background: rgba(22, 27, 48, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .spoiler-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+        .spoiler-unblurred {
+            filter: blur(0);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .spider-btn:active {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-[0_0_20px_rgba(226,54,54,0.1)]">
+<div class="max-w-7xl mx-auto px-container-margin py-4 flex justify-between items-center w-full">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter">CineCircle</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="watch_groups.html">Watch Groups</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="my_plans.html">My Plans</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="discussion_board.html">Discussion Board</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary-container transition-all w-64" placeholder="Search discussions..." type="text"/>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container/20 bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></div>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-4xl mx-auto w-full px-container-margin py-section-padding">
+<div class="mb-10">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Cinematic Feed</h1>
+<p class="text-on-surface-variant font-body-md text-body-md">Join the conversation with fellow cinephiles.</p>
+</div>
+<!-- Composer Section -->
+<section class="glass-panel rounded-xl p-6 mb-10 shadow-xl">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-surface-container-high text-primary flex items-center justify-center font-bold" id="composer-avatar"></div>
+<div class="flex-grow">
+<textarea class="w-full bg-surface-container-low border border-white/5 rounded-xl p-4 text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none min-h-[120px] transition-all" id="post-text" placeholder="Share your thoughts..."></textarea>
+<p class="text-error text-sm hidden mt-2" id="post-error"></p>
+<div class="flex items-center justify-between mt-4">
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input class="peer appearance-none w-5 h-5 border-2 border-outline rounded bg-transparent checked:bg-primary-container checked:border-primary-container transition-all" id="post-spoiler" type="checkbox"/>
+<span class="material-symbols-outlined absolute text-[16px] text-white opacity-0 peer-checked:opacity-100 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">check</span>
+</div>
+<span class="text-on-surface-variant font-label-sm text-label-sm group-hover:text-on-surface transition-colors">Contains Spoilers</span>
+</label>
+<button class="bg-primary-container hover:bg-primary-container/90 text-on-primary-container font-bold px-8 py-2 rounded-full transition-all active:scale-95 shadow-[0_0_15px_rgba(255,84,78,0.3)]" id="post-submit">
+                            Post
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Feed Section -->
+<div class="space-y-card-gap" id="feed">
+<p class="text-on-surface-variant text-center py-10">Loading discussion…</p>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-white/5 py-10 mt-auto">
+<div class="max-w-7xl mx-auto px-container-margin flex flex-col md:flex-row justify-between items-center gap-6">
+<span class="font-display-lg text-display-lg text-primary opacity-50 select-none">CineCircle</span>
+<div class="flex gap-8">
+<a class="text-tertiary-container hover:text-secondary hover:underline transition-all font-label-sm text-label-sm" href="#">Privacy Policy</a>
+<a class="text-tertiary-container hover:text-secondary hover:underline transition-all font-label-sm text-label-sm" href="#">Terms of Service</a>
+<a class="text-tertiary-container hover:text-secondary hover:underline transition-all font-label-sm text-label-sm" href="#">Help Center</a>
+<a class="text-tertiary-container hover:text-secondary hover:underline transition-all font-label-sm text-label-sm" href="#">About Us</a>
+</div>
+<p class="text-tertiary font-label-sm text-label-sm opacity-60">© 2024 CineCircle. For the love of cinema.</p>
+</div>
+</footer>
+<script src="js/app.js"></script>
+<script>
+        const user = CineCircle.requireUser();
+        document.getElementById('composer-avatar').textContent = CineCircle.initials(user?.name);
+
+        function revealSpoiler(container) {
+            const overlay = container.querySelector('.spoiler-overlay');
+            const content = container.querySelector('.spoiler-content');
+            overlay.classList.add('opacity-0');
+            content.classList.remove('spoiler-blur');
+            content.classList.add('spoiler-unblurred');
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+
+        async function likePost(id, btn) {
+            try {
+                const { likes } = await CineCircle.api(`/posts/${id}/like`, { method: 'POST' });
+                btn.querySelector('span:last-child').textContent = likes;
+                btn.classList.add('text-primary');
+                btn.style.transform = 'scale(1.2)';
+                setTimeout(() => btn.style.transform = '', 200);
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function postCard(p) {
+            const body = p.spoiler
+                ? `<div class="relative group cursor-pointer mt-2 mb-4" onclick="revealSpoiler(this)">
+                     <div class="spoiler-overlay absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface-container/60 backdrop-blur-md rounded-lg transition-opacity duration-300">
+                       <span class="material-symbols-outlined text-primary mb-1">warning</span>
+                       <span class="text-primary font-bold text-sm tracking-wide">⚠️ SPOILER — tap to reveal</span>
+                     </div>
+                     <p class="spoiler-content spoiler-blur text-on-surface font-body-md text-body-md leading-relaxed p-4 bg-surface-container/30 rounded-lg">${CineCircle.escapeHtml(p.text)}</p>
+                   </div>`
+                : `<p class="text-on-surface font-body-md text-body-md leading-relaxed mb-4">${CineCircle.escapeHtml(p.text)}</p>`;
+
+            return `<article class="glass-panel rounded-xl p-6 transition-transform hover:scale-[1.01] duration-300">
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container/20 bg-surface-container-high text-primary flex items-center justify-center font-bold flex-shrink-0">${CineCircle.initials(p.author?.name)}</div>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-title-md text-title-md text-on-surface">${CineCircle.escapeHtml(p.author?.name || 'Unknown')}</span>
+                            <span class="text-tertiary-container font-label-sm text-label-sm">${CineCircle.timeAgo(p.created_at)}</span>
+                        </div>
+                        ${body}
+                        <div class="flex items-center gap-6">
+                            <button class="spider-btn flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group" onclick="likePost('${p.id}', this)">
+                                <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">bug_report</span>
+                                <span class="font-label-sm text-label-sm">${p.likes}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </article>`;
+        }
+
+        async function loadFeed() {
+            const posts = await CineCircle.api('/posts');
+            const feed = document.getElementById('feed');
+            feed.innerHTML = posts.length
+                ? posts.map(postCard).join('')
+                : '<p class="text-on-surface-variant text-center py-10">No posts yet — be the first to share your take!</p>';
+        }
+
+        document.getElementById('post-submit').addEventListener('click', async () => {
+            const textEl = document.getElementById('post-text');
+            const errorEl = document.getElementById('post-error');
+            const text = textEl.value.trim();
+            errorEl.classList.add('hidden');
+            if (!text) {
+                errorEl.textContent = 'Write something first.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            try {
+                await CineCircle.api('/posts', {
+                    method: 'POST',
+                    body: { user_id: user.id, text, spoiler: document.getElementById('post-spoiler').checked },
+                });
+                textEl.value = '';
+                document.getElementById('post-spoiler').checked = false;
+                await loadFeed();
+            } catch (err) {
+                errorEl.textContent = err.message || 'Something went wrong.';
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        CineCircle.wireUserChip();
+        loadFeed().catch(err => {
+            document.getElementById('feed').innerHTML =
+                `<p class="text-error text-center py-10">Couldn't load the discussion: ${CineCircle.escapeHtml(err.message)}</p>`;
+        });
+    </script>
+</body></html>

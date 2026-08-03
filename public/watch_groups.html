@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CineCircle | Watch Groups</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#10131f",
+                    "surface-container-high": "#272936",
+                    "surface-variant": "#313442",
+                    "tertiary": "#c6c6c7",
+                    "surface-container": "#1c1f2c",
+                    "tertiary-container": "#909191",
+                    "on-secondary-fixed": "#00164d",
+                    "on-primary": "#680008",
+                    "on-primary-container": "#5c0006",
+                    "surface-bright": "#363946",
+                    "secondary": "#b5c4ff",
+                    "tertiary-fixed": "#e2e2e2",
+                    "on-background": "#e0e1f3",
+                    "error-container": "#93000a",
+                    "on-surface": "#e0e1f3",
+                    "secondary-fixed": "#dce1ff",
+                    "outline-variant": "#5b403d",
+                    "inverse-primary": "#bb161f",
+                    "primary": "#ffb3ad",
+                    "on-secondary-fixed-variant": "#234193",
+                    "on-error": "#690005",
+                    "primary-fixed": "#ffdad6",
+                    "secondary-container": "#234193",
+                    "on-tertiary": "#2f3131",
+                    "primary-fixed-dim": "#ffb3ad",
+                    "surface-container-low": "#181b27",
+                    "surface-dim": "#10131f",
+                    "surface-container-lowest": "#0b0e1a",
+                    "surface-tint": "#ffb3ad",
+                    "on-tertiary-container": "#282a2a",
+                    "on-surface-variant": "#e4bdba",
+                    "primary-container": "#ff544e",
+                    "on-primary-fixed": "#410003",
+                    "inverse-surface": "#e0e1f3",
+                    "on-secondary": "#00297b",
+                    "surface-container-highest": "#313442",
+                    "background": "#10131f",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "on-primary-fixed-variant": "#930010",
+                    "secondary-fixed-dim": "#b5c4ff",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "inverse-on-surface": "#2d303d",
+                    "outline": "#ab8885",
+                    "on-secondary-container": "#9cb2ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "card-gap": "20px",
+                    "container-margin": "24px",
+                    "gutter": "16px",
+                    "section-padding": "40px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "title-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #10131f;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+        .backdrop-blur-xl { backdrop-filter: blur(24px); }
+        .glass-card {
+            background: rgba(22, 27, 48, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+        }
+        .spider-web-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 L100 100 M100 0 L0 100 M50 0 L50 100 M0 50 L100 50' stroke='rgba(226,54,54,0.08)' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='50' cy='50' r='10' stroke='rgba(226,54,54,0.08)' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='50' cy='50' r='25' stroke='rgba(226,54,54,0.08)' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='50' cy='50' r='40' stroke='rgba(226,54,54,0.08)' stroke-width='0.5' fill='none'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+        .movie-gradient {
+            background: linear-gradient(0deg, rgba(16, 19, 31, 1) 0%, rgba(16, 19, 31, 0.6) 50%, rgba(16, 19, 31, 0) 100%);
+        }
+        .primary-button-glow {
+            box-shadow: 0 0 20px rgba(226, 54, 54, 0.25);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-[0_0_20px_rgba(226,54,54,0.1)]">
+<div class="max-w-7xl mx-auto px-container-margin py-4 flex justify-between items-center w-full">
+<div class="flex items-center gap-12">
+<a class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter" href="#">CineCircle</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="watch_groups.html">Watch Groups</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="my_plans.html">My Plans</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="discussion_board.html">Discussion Board</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="bg-surface-container border border-white/10 rounded-full py-2 pl-10 pr-4 w-64 text-sm focus:outline-none focus:border-primary-container transition-all" id="search-input" placeholder="Search movies..." type="text"/>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform duration-200 bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+</div>
+</div>
+</header>
+<main class="mt-[72px] flex-grow">
+<!-- Hero Banner -->
+<section class="relative w-full h-[60vh] min-h-[500px] flex items-end overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center" data-alt="A wide cinematic shot of Spider-Man perched on a Johannesburg skyscraper at dusk, the city lights twinkling below in a palette of deep navy, amber, and vibrant red. High-contrast lighting with a subtle web-like texture overlaid on the sky, evoking a premium modern superhero film aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCR-pwMYqE93urUJ9c0bWhI6zPbezrEjFybuRBdD3j4J_rjn-9Tk3Io3SKt5iC3QFdFOZbiBc87bXwx6cBUySgB__uhmlj-4JVRBk27oGr1AMRhp1w8MqqRptIZhyCBKa0dXqTRh99pQ6KnDyoULWYK4P1SNfcSEXoJZWUpDCZqLmiwB6kXhSzaDXOJipD9dEl2RKz4J1WjLSTlOVeZL1XKWHTUnwRwy6C7BtHIIgonmbp3HMqOD-qm')"></div>
+<div class="absolute inset-0 spider-web-overlay opacity-30"></div>
+<div class="absolute inset-0 movie-gradient"></div>
+</div>
+<div class="relative z-10 max-w-7xl mx-auto px-container-margin w-full pb-section-padding">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/20 border border-primary-container/50 rounded-full mb-6">
+<span class="flex h-2 w-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary-container">NOW SCREENING</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[64px] md:leading-[72px] mb-4 max-w-2xl">Spider-Man: Brand New Day</h1>
+<div class="flex items-center gap-4 mb-8">
+<span class="px-3 py-1 bg-surface-container border border-white/10 rounded font-label-sm text-label-sm text-on-surface-variant">Action / Adventure</span>
+<span class="text-on-surface-variant">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">135 min</span>
+</div>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary-container text-on-primary-fixed px-8 py-4 rounded-xl font-bold flex items-center gap-2 primary-button-glow hover:scale-105 active:scale-95 transition-all" onclick="document.getElementById('groups-section').scrollIntoView({behavior:'smooth'})">
+<span class="material-symbols-outlined">group_add</span>
+                        JOIN A GROUP
+                    </button>
+<button class="bg-surface/20 backdrop-blur-md border-[1.5px] border-secondary text-secondary px-8 py-4 rounded-xl font-bold hover:bg-secondary/10 transition-all">
+                        TRAILER
+                    </button>
+</div>
+</div>
+</section>
+<!-- Filters & Content -->
+<section class="max-w-7xl mx-auto px-container-margin py-section-padding" id="groups-section">
+<!-- Filter Bar -->
+<div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 glass-card p-6 rounded-2xl">
+<div class="flex flex-wrap gap-4 items-center w-full md:w-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<select class="bg-surface-container-high border-none rounded-lg text-on-surface focus:ring-1 focus:ring-primary py-2 px-4 pr-10" id="city-filter">
+<option value="">All cities</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">mood</span>
+<select class="bg-surface-container-high border-none rounded-lg text-on-surface focus:ring-1 focus:ring-primary py-2 px-4 pr-10" id="vibe-filter">
+<option value="">All Vibes</option>
+<option value="Hardcore fans">Hardcore fans</option>
+<option value="Casual">Casual</option>
+<option value="First-timers welcome">First-timers welcome</option>
+<option value="Quiet watchers">Quiet watchers</option>
+</select>
+</div>
+</div>
+<button class="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl flex items-center gap-2 hover:scale-105 transition-transform w-full md:w-auto justify-center" onclick="window.location.href='create_group.html'">
+<span class="material-symbols-outlined">add</span>
+                    Start a Group
+                </button>
+</div>
+<!-- Groups Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-card-gap" id="groups-grid">
+<p class="text-on-surface-variant col-span-full text-center py-10">Loading groups…</p>
+</div>
+<div class="hidden text-center py-16 text-on-surface-variant" id="groups-empty">
+<span class="material-symbols-outlined text-primary text-5xl mb-3 block">movie_filter</span>
+No groups match your filters — try clearing them, or start your own.
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-10 mt-auto bg-surface-container-lowest border-t border-white/5">
+<div class="max-w-7xl mx-auto px-container-margin flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="font-display-lg text-display-lg text-primary opacity-50">CineCircle</span>
+<p class="font-label-sm text-label-sm text-tertiary-container">© 2024 CineCircle. For the love of cinema.</p>
+</div>
+<nav class="flex flex-wrap justify-center gap-6">
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">Help Center</a>
+<a class="font-label-sm text-label-sm text-tertiary-container hover:text-secondary hover:underline transition-all" href="#">About Us</a>
+</nav>
+</div>
+</footer>
+<!-- Interactive Layer: Hover Effects script -->
+<script src="js/app.js"></script>
+<script>
+        const user = CineCircle.requireUser();
+
+        let allGroups = [];
+        let allScreenings = [];
+
+        function wireCardHover() {
+            document.querySelectorAll('.glass-card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                    card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                });
+            });
+        }
+
+        function formatIcon(vibe) {
+            if (vibe === 'Hardcore fans') return 'bolt';
+            if (vibe === 'First-timers welcome') return 'diversity_3';
+            if (vibe === 'Quiet watchers') return 'volume_off';
+            return 'groups';
+        }
+
+        function groupCard(g) {
+            const full = g.members.length >= g.max_size;
+            const joined = g.members.some(m => m.id === user.id);
+            const avatars = g.members.slice(0, 4).map(m =>
+                `<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center font-label-sm text-[10px] text-on-surface">${CineCircle.initials(m.name)}</div>`
+            ).join('');
+            const extra = g.members.length > 4
+                ? `<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-variant flex items-center justify-center font-label-sm text-[10px] text-on-surface">+${g.members.length - 4}</div>`
+                : '';
+
+            let buttonHtml;
+            if (joined) {
+                buttonHtml = `<button class="w-full py-4 bg-secondary-container/40 text-secondary font-bold cursor-default flex items-center justify-center gap-2" disabled>
+                    <span class="material-symbols-outlined">check_circle</span> YOU'RE IN — SEE MY PLANS
+                </button>`;
+            } else if (full) {
+                buttonHtml = `<button class="w-full py-4 bg-surface-variant text-on-surface-variant font-bold cursor-not-allowed" disabled>GROUP FULL</button>`;
+            } else {
+                buttonHtml = `<button class="w-full py-4 bg-primary text-on-primary font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2" onclick="joinGroup('${g.id}')">JOIN GROUP</button>`;
+            }
+
+            return `<div class="glass-card rounded-2xl overflow-hidden flex flex-col group hover:shadow-[0_0_30px_rgba(226,54,54,0.15)] transition-all duration-300 border-t border-l border-white/20">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-title-md text-title-md text-primary mb-1">${CineCircle.escapeHtml(g.name)}</h3>
+                            <div class="flex items-center gap-2 text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[18px]">theater_comedy</span>
+                                <span class="font-label-sm text-label-sm">${CineCircle.escapeHtml(g.screening?.cinema || '')}</span>
+                            </div>
+                        </div>
+                        <span class="bg-primary-container/10 border border-primary-container text-primary-container font-label-sm text-label-sm px-2 py-1 rounded">${CineCircle.escapeHtml(g.screening?.format || '')}</span>
+                    </div>
+                    <div class="flex items-center gap-4 mb-6 py-3 border-y border-white/5">
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+                            <span class="font-body-md text-body-md">${CineCircle.escapeHtml(g.screening?.show_time || '')}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-primary text-[18px]">${formatIcon(g.vibe)}</span>
+                            <span class="font-body-md text-body-md">${CineCircle.escapeHtml(g.vibe)}</span>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <p class="text-on-surface-variant font-label-sm text-label-sm mb-3 uppercase tracking-wider">Post-Movie Hangout</p>
+                        <div class="flex items-start gap-3 bg-surface-container-high/50 p-3 rounded-xl">
+                            <span class="material-symbols-outlined text-secondary">coffee</span>
+                            <div>
+                                <p class="font-body-md text-body-md text-on-surface">${CineCircle.escapeHtml(g.spot)}</p>
+                                <p class="text-sm text-on-surface-variant italic">"${CineCircle.escapeHtml(g.topic)}"</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-auto">
+                        <div class="flex -space-x-3">${avatars}${extra}</div>
+                        <span class="font-label-sm text-label-sm ${full ? 'text-primary' : 'text-on-surface-variant'}">${g.members.length} / ${g.max_size} joined</span>
+                    </div>
+                </div>
+                ${buttonHtml}
+            </div>`;
+        }
+
+        function render() {
+            const city = document.getElementById('city-filter').value;
+            const vibe = document.getElementById('vibe-filter').value;
+            const search = document.getElementById('search-input').value.trim().toLowerCase();
+
+            let filtered = allGroups.filter(g => {
+                if (city && g.screening?.city !== city) return false;
+                if (vibe && g.vibe !== vibe) return false;
+                if (search && !g.name.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            const grid = document.getElementById('groups-grid');
+            const empty = document.getElementById('groups-empty');
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+            } else {
+                empty.classList.add('hidden');
+                grid.innerHTML = filtered.map(groupCard).join('');
+            }
+            wireCardHover();
+        }
+
+        async function joinGroup(id) {
+            try {
+                await CineCircle.api(`/groups/${id}/join`, { method: 'POST', body: { user_id: user.id } });
+                await loadGroups();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function loadGroups() {
+            const [screenings, groups] = await Promise.all([
+                CineCircle.api('/screenings'),
+                CineCircle.api('/groups'),
+            ]);
+            allScreenings = screenings;
+            allGroups = groups;
+
+            const citySelect = document.getElementById('city-filter');
+            const currentCity = citySelect.value;
+            const cities = [...new Set(screenings.map(s => s.city))];
+            citySelect.innerHTML = '<option value="">All cities</option>' +
+                cities.map(c => `<option value="${CineCircle.escapeHtml(c)}">${CineCircle.escapeHtml(c)}</option>`).join('');
+            citySelect.value = currentCity;
+
+            render();
+        }
+
+        document.getElementById('city-filter').addEventListener('change', render);
+        document.getElementById('vibe-filter').addEventListener('change', render);
+        document.getElementById('search-input').addEventListener('input', render);
+
+        CineCircle.wireUserChip();
+        loadGroups().catch(err => {
+            document.getElementById('groups-grid').innerHTML =
+                `<p class="text-error col-span-full text-center py-10">Couldn't load groups: ${CineCircle.escapeHtml(err.message)}</p>`;
+        });
+    </script>
+</body></html>
