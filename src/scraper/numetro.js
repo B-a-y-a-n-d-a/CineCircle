@@ -1,15 +1,16 @@
 import { extractShowtimesFromPage } from './extract.js';
+import { chooseCinemaByText } from './siteHelpers.js';
 
 // Best-effort v1 — same caveats as sterkinekor.js. Nu Metro's homepage has a
-// "Choose a cinema" table of cinema names; clicking one should land on that
-// cinema's showtimes page.
+// "Choose a cinema" table of cinema names, which may be a <select> or plain
+// clickable rows; chooseCinemaByText() tries both.
 export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
   const page = await browser.newPage();
   try {
     await page.goto('https://www.numetro.co.za/', { waitUntil: 'networkidle', timeout: 30000 });
 
-    const cinemaLink = page.getByText(cinemaSiteName, { exact: false }).first();
-    await cinemaLink.click({ timeout: 10000 });
+    const selected = await chooseCinemaByText(page, cinemaSiteName);
+    if (!selected) return { ok: false, error: `Could not find cinema filter for "${cinemaSiteName}"`, url: page.url() };
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
 
     const dateButtons = page.locator('[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i]');

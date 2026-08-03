@@ -1,18 +1,19 @@
 import { extractShowtimesFromPage } from './extract.js';
+import { chooseCinemaByText } from './siteHelpers.js';
 
-// Best-effort v1: Ster-Kinekor's homepage lists every cinema by name; clicking
-// one is expected to land on a schedule page for that cinema with a date
-// selector (tabs/buttons) for the next few days. dayIndex: 0 = today, 1 =
-// tomorrow, 2 = day after. If your first run comes back empty, the most
-// likely fix is the click targets below — see docs/SCRAPER_SETUP.md.
+// v2 — confirmed from a live run that the "now showing" page is reached
+// directly at this URL, and the cinema filter is a native <select> whose
+// options are lowercase slugs (e.g. value="sandton", label "Sandton").
+// dayIndex: 0 = today, 1 = tomorrow, 2 = day after.
 export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex) {
   const page = await browser.newPage();
   try {
-    await page.goto('https://www.sterkinekor.com/', { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto('https://www.sterkinekor.com/actual-content?tab=now-showing', {
+      waitUntil: 'networkidle', timeout: 30000,
+    });
 
-    // Click the cinema by visible name (case-insensitive partial match).
-    const cinemaLink = page.getByText(cinemaSiteName, { exact: false }).first();
-    await cinemaLink.click({ timeout: 10000 });
+    const selected = await chooseCinemaByText(page, cinemaSiteName);
+    if (!selected) return { ok: false, error: `Could not find cinema filter for "${cinemaSiteName}"`, url: page.url() };
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
 
     // Try to select the right day. Sites like this usually render a small
