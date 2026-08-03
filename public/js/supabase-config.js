@@ -8,5 +8,5 @@
 
 window.SUPABASE_CONFIG = {
   url: 'https://xgwfgoqrgjkbkmrurftb.supabase.co',
-  anonKey: 'PASTE_YOUR_ANON_OR_PUBLISHABLE_KEY_HERE',
+  anonKey: 'sb_publishable_GSuqftUxtvQV2P5NoOD9hg_8l-kkR6V',
 };

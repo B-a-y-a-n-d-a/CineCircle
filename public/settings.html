@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings | CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body {
+        background-color: #10131f;
+        background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
+        background-size: 32px 32px;
+    }
+    .glass-card { background: rgba(22, 27, 48, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); }
+</style>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: { extend: {
+            "colors": {
+                "surface": "#10131f", "surface-container-high": "#272936", "surface-variant": "#313442",
+                "tertiary": "#c6c6c7", "surface-container": "#1c1f2c", "tertiary-container": "#909191",
+                "on-primary": "#680008", "on-primary-container": "#5c0006", "secondary": "#b5c4ff",
+                "on-background": "#e0e1f3", "error-container": "#93000a", "on-surface": "#e0e1f3",
+                "primary": "#ffb3ad", "primary-container": "#ff544e", "on-primary-fixed": "#410003",
+                "surface-container-lowest": "#0b0e1a", "on-surface-variant": "#e4bdba",
+                "background": "#10131f", "error": "#ffb4ab", "outline": "#ab8885", "secondary-container": "#234193"
+            },
+            "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            "spacing": { "card-gap": "20px", "container-margin": "24px", "section-padding": "40px" },
+            "fontFamily": {
+                "label-sm": ["Inter"], "display-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"],
+                "body-md": ["Inter"], "title-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+        } },
+    }
+</script>
+</head>
+<body class="font-body-md text-on-surface min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10">
+<div class="max-w-4xl mx-auto px-container-margin py-4 flex justify-between items-center w-full">
+<div class="flex items-center gap-12">
+<a class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter" href="watch_groups.html">CineCircle</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors" href="watch_groups.html">Watch Groups</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors" href="my_plans.html">My Plans</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors" href="discussion_board.html">Discussion Board</a>
+</nav>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform duration-200 bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+</div>
+</header>
+
+<main class="mt-[96px] flex-grow max-w-2xl mx-auto w-full px-container-margin pb-section-padding">
+<h1 class="font-headline-lg text-headline-lg mb-2">Settings</h1>
+<p class="text-on-surface-variant mb-10">Update your display name, email, or password.</p>
+
+<!-- Display name -->
+<section class="glass-card rounded-2xl p-6 mb-6">
+<h2 class="font-title-md text-title-md mb-1">Display Name</h2>
+<p class="text-on-surface-variant text-sm mb-4">This is what other cinephiles see on your groups and posts.</p>
+<div class="flex flex-col sm:flex-row gap-3">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="name-input" placeholder="Your display name" type="text"/>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95 whitespace-nowrap" id="name-save">Save Name</button>
+</div>
+<p class="text-error text-sm hidden mt-3" id="name-error"></p>
+<p class="text-secondary text-sm hidden mt-3" id="name-success"></p>
+</section>
+
+<!-- Email -->
+<section class="glass-card rounded-2xl p-6 mb-6">
+<h2 class="font-title-md text-title-md mb-1">Email Address</h2>
+<p class="text-on-surface-variant text-sm mb-4">We'll send a confirmation link to your new address before the change takes effect.</p>
+<div class="flex flex-col sm:flex-row gap-3">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="email-input" placeholder="you@example.com" type="email"/>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95 whitespace-nowrap" id="email-save">Save Email</button>
+</div>
+<p class="text-error text-sm hidden mt-3" id="email-error"></p>
+<p class="text-secondary text-sm hidden mt-3" id="email-success"></p>
+</section>
+
+<!-- Password -->
+<section class="glass-card rounded-2xl p-6 mb-6">
+<h2 class="font-title-md text-title-md mb-1">Password</h2>
+<p class="text-on-surface-variant text-sm mb-4">Choose a new password (at least 6 characters). If you signed in with Google, this sets a password you can also use to sign in directly.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="password-input" minlength="6" placeholder="New password" type="password"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none" id="password-confirm" minlength="6" placeholder="Confirm new password" type="password"/>
+</div>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="password-save">Update Password</button>
+<p class="text-error text-sm hidden mt-3" id="password-error"></p>
+<p class="text-secondary text-sm hidden mt-3" id="password-success"></p>
+</section>
+
+<button class="w-full sm:w-auto px-6 py-3 rounded-lg border border-error/40 text-error font-semibold hover:bg-error-container/20 transition-all active:scale-95 flex items-center justify-center gap-2" id="logout-btn">
+<span class="material-symbols-outlined">logout</span> Log Out
+</button>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+    function showMsg(id, text, isError) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.classList.remove('hidden');
+        el.classList.toggle('text-error', isError);
+    }
+    function hideMsg(id) { document.getElementById(id).classList.add('hidden'); }
+
+    document.getElementById('name-save').addEventListener('click', async () => {
+        hideMsg('name-error'); hideMsg('name-success');
+        const name = document.getElementById('name-input').value.trim();
+        if (!name) return showMsg('name-error', 'Display name cannot be empty.', true);
+        try {
+            const session = await CineCircleAuth.getSession();
+            const updated = await CineCircle.api('/users', {
+                method: 'POST',
+                body: { auth_id: session.user.id, email: session.user.email, name },
+            });
+            CineCircle.setUser(updated);
+            showMsg('name-success', 'Display name updated.', false);
+            CineCircle.wireUserChip();
+        } catch (err) {
+            showMsg('name-error', err.message || 'Something went wrong.', true);
+        }
+    });
+
+    document.getElementById('email-save').addEventListener('click', async () => {
+        hideMsg('email-error'); hideMsg('email-success');
+        const email = document.getElementById('email-input').value.trim();
+        if (!email) return showMsg('email-error', 'Email cannot be empty.', true);
+        try {
+            await CineCircleAuth.updateEmail(email);
+            showMsg('email-success', 'Check your new inbox for a confirmation link — the change applies once you click it.', false);
+        } catch (err) {
+            showMsg('email-error', err.message || 'Something went wrong.', true);
+        }
+    });
+
+    document.getElementById('password-save').addEventListener('click', async () => {
+        hideMsg('password-error'); hideMsg('password-success');
+        const pw = document.getElementById('password-input').value;
+        const confirm = document.getElementById('password-confirm').value;
+        if (pw.length < 6) return showMsg('password-error', 'Password must be at least 6 characters.', true);
+        if (pw !== confirm) return showMsg('password-error', "Passwords don't match.", true);
+        try {
+            await CineCircleAuth.updatePassword(pw);
+            document.getElementById('password-input').value = '';
+            document.getElementById('password-confirm').value = '';
+            showMsg('password-success', 'Password updated.', false);
+        } catch (err) {
+            showMsg('password-error', err.message || 'Something went wrong.', true);
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => CineCircle.signOut());
+
+    (async () => {
+        const session = await CineCircle.requireSession();
+        if (!session) return;
+        const user = CineCircle.requireUser();
+        if (!user) return;
+        document.getElementById('name-input').value = user.name || '';
+        document.getElementById('email-input').value = session.user.email || '';
+        CineCircle.wireUserChip();
+    })();
+</script>
+</body></html>

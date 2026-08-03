@@ -37,5 +37,22 @@
     return data.session;
   }
 
-  window.CineCircleAuth = { client, signUpWithPassword, signInWithPassword, signInWithGoogle, signOut, getSession };
+  // Sends a confirmation link to the new address; the change only takes
+  // effect once the person clicks it (Supabase default security behaviour).
+  async function updateEmail(newEmail) {
+    const { data, error } = await client.auth.updateUser({ email: newEmail });
+    if (error) throw error;
+    return data;
+  }
+
+  async function updatePassword(newPassword) {
+    const { data, error } = await client.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    return data;
+  }
+
+  window.CineCircleAuth = {
+    client, signUpWithPassword, signInWithPassword, signInWithGoogle, signOut, getSession,
+    updateEmail, updatePassword,
+  };
 })();
