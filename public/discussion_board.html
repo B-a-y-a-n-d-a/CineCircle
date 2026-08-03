@@ -148,15 +148,26 @@
 </div>
 </header>
 <main class="flex-grow max-w-4xl mx-auto w-full px-container-margin py-section-padding">
-<div class="mb-10">
+<div class="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+<div>
 <h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Cinematic Feed</h1>
 <p class="text-on-surface-variant font-body-md text-body-md">Join the conversation with fellow cinephiles.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">movie</span>
+<select class="bg-surface-container-low border border-white/10 rounded-lg text-on-surface focus:ring-1 focus:ring-primary py-2 px-3" id="feed-movie-filter">
+<option value="">All movies</option>
+</select>
+</div>
 </div>
 <!-- Composer Section -->
 <section class="glass-panel rounded-xl p-6 mb-10 shadow-xl">
 <div class="flex gap-4">
 <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-surface-container-high text-primary flex items-center justify-center font-bold" id="composer-avatar"></div>
 <div class="flex-grow">
+<select class="w-full bg-surface-container-low border border-white/5 rounded-lg px-3 py-2 mb-3 text-on-surface text-sm focus:ring-1 focus:ring-primary-container outline-none" id="post-movie">
+<option value="">Loading movies…</option>
+</select>
 <textarea class="w-full bg-surface-container-low border border-white/5 rounded-xl p-4 text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none min-h-[120px] transition-all" id="post-text" placeholder="Share your thoughts..."></textarea>
 <p class="text-error text-sm hidden mt-2" id="post-error"></p>
 <div class="flex items-center justify-between mt-4">
@@ -239,6 +250,7 @@
                             <span class="font-title-md text-title-md text-on-surface">${CineCircle.escapeHtml(p.author?.name || 'Unknown')}</span>
                             <span class="text-tertiary-container font-label-sm text-label-sm">${CineCircle.timeAgo(p.created_at)}</span>
                         </div>
+                        <span class="inline-block mb-2 text-[11px] font-bold uppercase tracking-wider text-secondary bg-secondary-container/20 px-2 py-0.5 rounded-full">${CineCircle.escapeHtml(p.movie?.title || '')}</span>
                         ${body}
                         <div class="flex items-center gap-6">
                             <button class="spider-btn flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group" onclick="likePost('${p.id}', this)">
@@ -252,27 +264,45 @@
         }
 
         async function loadFeed() {
-            const posts = await CineCircle.api('/posts');
+            const movieId = document.getElementById('feed-movie-filter').value;
+            const posts = await CineCircle.api(movieId ? `/posts?movie_id=${movieId}` : '/posts');
             const feed = document.getElementById('feed');
             feed.innerHTML = posts.length
                 ? posts.map(postCard).join('')
                 : '<p class="text-on-surface-variant text-center py-10">No posts yet — be the first to share your take!</p>';
         }
 
+        async function loadMoviesForBoard() {
+            const movies = await CineCircle.api('/movies');
+            const filterSelect = document.getElementById('feed-movie-filter');
+            const postSelect = document.getElementById('post-movie');
+            filterSelect.innerHTML = '<option value="">All movies</option>' +
+                movies.map(m => `<option value="${m.id}">${CineCircle.escapeHtml(m.title)}</option>`).join('');
+            postSelect.innerHTML = movies.map(m => `<option value="${m.id}">${CineCircle.escapeHtml(m.title)}</option>`).join('');
+        }
+
+        document.getElementById('feed-movie-filter').addEventListener('change', loadFeed);
+
         document.getElementById('post-submit').addEventListener('click', async () => {
             const textEl = document.getElementById('post-text');
             const errorEl = document.getElementById('post-error');
             const text = textEl.value.trim();
+            const movieId = document.getElementById('post-movie').value;
             errorEl.classList.add('hidden');
             if (!text) {
                 errorEl.textContent = 'Write something first.';
                 errorEl.classList.remove('hidden');
                 return;
             }
+            if (!movieId) {
+                errorEl.textContent = 'Pick which movie this is about.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
             try {
                 await CineCircle.api('/posts', {
                     method: 'POST',
-                    body: { user_id: user.id, text, spoiler: document.getElementById('post-spoiler').checked },
+                    body: { user_id: user.id, text, spoiler: document.getElementById('post-spoiler').checked, movie_id: Number(movieId) },
                 });
                 textEl.value = '';
                 document.getElementById('post-spoiler').checked = false;
@@ -291,6 +321,7 @@
             document.getElementById('composer-avatar').textContent = CineCircle.initials(user?.name);
             CineCircle.wireUserChip();
             try {
+                await loadMoviesForBoard();
                 await loadFeed();
             } catch (err) {
                 document.getElementById('feed').innerHTML =

@@ -34,6 +34,12 @@
       window.location.href = 'welcome.html';
       return null;
     }
+    if (user.is_banned) {
+      clearUser();
+      if (window.CineCircleAuth) window.CineCircleAuth.signOut();
+      window.location.href = 'login.html?banned=1';
+      return null;
+    }
     return user;
   }
 
@@ -120,6 +126,9 @@
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:6px;">
           <div style="font-weight:700;font-size:0.9rem;color:#e0e1f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(user?.name || 'Guest')}</div>
         </div>
+        ${user?.is_admin ? `<button type="button" data-menu-admin style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;color:#ffb3ad;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;">
+          <span class="material-symbols-outlined" style="font-size:18px;">shield_person</span> Admin
+        </button>` : ''}
         <button type="button" data-menu-settings style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;color:#e0e1f3;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;">
           <span class="material-symbols-outlined" style="font-size:18px;">settings</span> Settings
         </button>
@@ -149,6 +158,8 @@
       menu.querySelector('[data-menu-settings]').addEventListener('click', () => {
         window.location.href = 'settings.html';
       });
+      const adminBtn = menu.querySelector('[data-menu-admin]');
+      if (adminBtn) adminBtn.addEventListener('click', () => window.location.href = 'admin.html');
       menu.querySelector('[data-menu-logout]').addEventListener('click', () => {
         closeMenu();
         signOut();

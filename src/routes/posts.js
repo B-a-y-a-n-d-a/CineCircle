@@ -1,31 +1,37 @@
 import { Router } from 'express';
 import { supabase } from '../supabase.js';
+import { assertNotBanned } from '../middleware/requireAdmin.js';
 
 const router = Router();
 
-// GET /api/posts
+// GET /api/posts?movie_id=1
 router.get('/', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('posts')
-      .select('id, text, spoiler, likes, created_at, author:users(id, name)')
+      .select('id, text, spoiler, likes, created_at, author:users(id, name), movie:movies(id, title)')
       .order('created_at', { ascending: false });
+    if (req.query.movie_id) query = query.eq('movie_id', req.query.movie_id);
+    const { data, error } = await query;
     if (error) throw error;
     res.json(data);
   } catch (err) { next(err); }
 });
 
-// POST /api/posts  { user_id, text, spoiler }
+// POST /api/posts  { user_id, text, spoiler, movie_id }
 router.post('/', async (req, res, next) => {
   try {
-    const { user_id, text, spoiler } = req.body;
+    const { user_id, text, spoiler, movie_id } = req.body;
     if (!user_id || !text?.trim()) {
       return res.status(400).json({ error: 'user_id and text are required' });
     }
+    if (!movie_id) return res.status(400).json({ error: 'movie_id is required' });
+    await assertNotBanned(user_id);
+
     const { data, error } = await supabase
       .from('posts')
-      .insert({ user_id, text: text.trim(), spoiler: !!spoiler })
-      .select()
+      .insert({ user_id, text: text.trim(), spoiler: !!spoiler, movie_id })
+      .select('id, text, spoiler, likes, created_at, author:users(id, name), movie:movies(id, title)')
       .single();
     if (error) throw error;
     res.status(201).json(data);

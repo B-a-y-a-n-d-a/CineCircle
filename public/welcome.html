@@ -230,6 +230,11 @@
                 return;
             }
             const existing = await CineCircle.fetchExistingProfile(session.user.id);
+            if (existing?.is_banned) {
+                await CineCircleAuth.signOut();
+                window.location.href = 'login.html?banned=1';
+                return;
+            }
             if (existing) {
                 CineCircle.setUser(existing);
                 window.location.href = 'watch_groups.html';

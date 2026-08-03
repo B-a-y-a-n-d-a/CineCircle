@@ -37,6 +37,11 @@
     return data.session;
   }
 
+  async function getAccessToken() {
+    const session = await getSession();
+    return session?.access_token || null;
+  }
+
   // Sends a confirmation link to the new address; the change only takes
   // effect once the person clicks it (Supabase default security behaviour).
   async function updateEmail(newEmail) {
@@ -52,7 +57,7 @@
   }
 
   window.CineCircleAuth = {
-    client, signUpWithPassword, signInWithPassword, signInWithGoogle, signOut, getSession,
+    client, signUpWithPassword, signInWithPassword, signInWithGoogle, signOut, getSession, getAccessToken,
     updateEmail, updatePassword,
   };
 })();

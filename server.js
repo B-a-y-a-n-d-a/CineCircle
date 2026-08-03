@@ -8,6 +8,10 @@ import usersRouter from './src/routes/users.js';
 import screeningsRouter from './src/routes/screenings.js';
 import groupsRouter from './src/routes/groups.js';
 import postsRouter from './src/routes/posts.js';
+import moviesRouter from './src/routes/movies.js';
+import groupChatRouter from './src/routes/groupChat.js';
+import pollsRouter from './src/routes/polls.js';
+import adminRouter from './src/routes/admin.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,8 +22,12 @@ app.use(express.json());
 // API routes
 app.use('/api/users', usersRouter);
 app.use('/api/screenings', screeningsRouter);
+app.use('/api/movies', moviesRouter);
 app.use('/api/groups', groupsRouter);
+app.use('/api/groups', groupChatRouter); // adds /:id/messages
+app.use('/api/groups', pollsRouter);     // adds /:id/polls and /polls/:pollId/vote
 app.use('/api/posts', postsRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (req, res) => res.json({ ok: true, app: 'CineCircle API' }));
 

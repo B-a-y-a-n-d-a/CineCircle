@@ -155,10 +155,14 @@
 </nav>
 <main class="pt-32 pb-section-padding px-container-margin max-w-7xl mx-auto min-h-[calc(100vh-200px)]">
 <!-- Header Section -->
-<header class="mb-10">
+<header class="mb-6">
 <h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">My Watch Groups</h1>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Manage your active cinema circles and upcoming watch parties. Stay connected with your favorite film buffs.</p>
 </header>
+<div class="hidden mb-8 p-4 rounded-xl bg-secondary-container/30 border border-secondary/30 text-secondary flex items-center gap-3" id="requested-banner">
+<span class="material-symbols-outlined">hourglass_top</span>
+Your group request has been submitted — it'll appear here once an admin approves it.
+</div>
 <!-- Dynamic Content Area -->
 <div id="content-canvas">
 <!-- Joined Groups Grid -->
@@ -179,6 +183,73 @@
 </div>
 </div>
 </main>
+
+<!-- Group Detail Modal -->
+<div class="hidden fixed inset-0 z-50 items-center justify-center p-4" id="group-modal">
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-xl" onclick="closeGroupModal()"></div>
+<div class="relative glass-card rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+<div class="flex items-center justify-between p-6 border-b border-white/5 flex-shrink-0">
+<h2 class="font-title-md text-title-md" id="modal-group-name">Group</h2>
+<button class="p-2 hover:bg-white/5 rounded-full transition-colors" onclick="closeGroupModal()"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex border-b border-white/5 flex-shrink-0">
+<button class="flex-1 py-3 font-label-sm text-label-sm border-b-2 border-primary text-primary" data-modal-tab="info" onclick="switchModalTab('info')">INFO</button>
+<button class="flex-1 py-3 font-label-sm text-label-sm border-b-2 border-transparent text-on-surface-variant" data-modal-tab="chat" onclick="switchModalTab('chat')">CHAT</button>
+<button class="flex-1 py-3 font-label-sm text-label-sm border-b-2 border-transparent text-on-surface-variant" data-modal-tab="poll" onclick="switchModalTab('poll')">POLLS</button>
+</div>
+<div class="flex-1 overflow-y-auto p-6">
+
+<!-- INFO PANEL (pinned card) -->
+<div id="modal-panel-info">
+<div class="bg-surface-container-high/50 rounded-xl p-5 mb-4">
+<div class="text-secondary text-xs font-bold uppercase tracking-wider mb-1" id="modal-info-movie"></div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[18px]">theater_comedy</span><span id="modal-info-cinema"></span></div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-1"><span class="material-symbols-outlined text-[18px]">schedule</span><span id="modal-info-time"></span></div>
+<div class="flex items-center gap-2 text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">mood</span><span id="modal-info-vibe"></span></div>
+</div>
+<div class="bg-surface-container-high/50 rounded-xl p-5 mb-4">
+<p class="text-on-surface-variant text-xs uppercase tracking-wider mb-2">Post-Movie Hangout</p>
+<p class="font-body-md" id="modal-info-spot"></p>
+<p class="text-on-surface-variant text-sm italic mt-1" id="modal-info-topic"></p>
+</div>
+<div>
+<p class="text-on-surface-variant text-xs uppercase tracking-wider mb-2">Members</p>
+<div class="flex flex-wrap gap-2" id="modal-info-members"></div>
+</div>
+</div>
+
+<!-- CHAT PANEL -->
+<div class="hidden" id="modal-panel-chat">
+<div class="space-y-3 mb-4" id="modal-chat-feed"></div>
+<div class="flex gap-2 sticky bottom-0">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2.5 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="modal-chat-input" placeholder="Say something to the group…" type="text"/>
+<button class="px-5 py-2.5 rounded-lg bg-primary-container text-white font-bold" id="modal-chat-send">Send</button>
+</div>
+</div>
+
+<!-- POLLS PANEL -->
+<div class="hidden" id="modal-panel-poll">
+<div id="modal-polls-list" class="space-y-4 mb-6"></div>
+<div class="bg-surface-container-high/50 rounded-xl p-4">
+<p class="font-label-sm text-label-sm mb-3">Start a new poll</p>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2.5 mb-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="poll-question" placeholder="e.g. Where should we go after?" type="text"/>
+<div id="poll-options-inputs" class="space-y-2 mb-2">
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input" placeholder="Option 1" type="text"/>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input" placeholder="Option 2" type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="text-secondary text-sm font-bold" id="poll-add-option" type="button">+ Add option</button>
+<span class="flex-1"></span>
+<button class="px-5 py-2 rounded-lg bg-primary-container text-white font-bold text-sm" id="poll-create-btn" type="button">Create Poll</button>
+</div>
+<p class="text-error text-sm hidden mt-2" id="poll-error"></p>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
 <!-- Footer -->
 <footer class="w-full py-10 mt-auto bg-surface-container-lowest border-t border-white/5">
 <div class="max-w-7xl mx-auto px-container-margin flex flex-col md:flex-row justify-between items-center">
@@ -219,17 +290,28 @@
 <script src="js/app.js"></script>
 <script>
         let user;
+        let myGroups = [];
+        let activeGroup = null;
+        let chatPollTimer = null;
+
+        const STATUS_BADGE = {
+            pending: '<span class="bg-secondary/20 text-secondary px-2 py-0.5 rounded-full text-[11px] font-bold">PENDING APPROVAL</span>',
+            rejected: '<span class="bg-error-container/30 text-error px-2 py-0.5 rounded-full text-[11px] font-bold">NOT APPROVED</span>',
+        };
 
         function planCard(g) {
-            return `<div class="glass-card rounded-xl overflow-hidden group/card relative">
+            const badge = STATUS_BADGE[g.status] || '';
+            return `<div class="glass-card rounded-xl overflow-hidden group/card relative cursor-pointer" onclick="openGroupModal('${g.id}')">
                 <div class="h-32 relative overflow-hidden bg-gradient-to-br from-primary-container/30 to-secondary-container/30 flex items-center justify-center">
                     <span class="material-symbols-outlined text-primary text-5xl opacity-40">theater_comedy</span>
                     <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
                         <span class="bg-primary/20 backdrop-blur-md border border-primary/30 text-primary px-3 py-1 rounded-full font-label-sm text-label-sm">${CineCircle.escapeHtml(g.vibe)}</span>
+                        ${badge}
                     </div>
                 </div>
                 <div class="p-5 flex flex-col gap-4">
                     <div>
+                        <div class="text-secondary text-[11px] font-bold uppercase tracking-wider mb-1">${CineCircle.escapeHtml(g.screening?.movie?.title || '')}</div>
                         <h3 class="font-title-md text-title-md text-on-surface mb-1">${CineCircle.escapeHtml(g.name)}</h3>
                         <p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">${CineCircle.escapeHtml(g.screening?.cinema || '')} — "${CineCircle.escapeHtml(g.topic)}"</p>
                     </div>
@@ -243,7 +325,7 @@
                             <span>${g.members.length} / ${g.max_size} Members</span>
                         </div>
                     </div>
-                    <button class="w-full py-3 rounded-lg border-1.5 border-outline hover:bg-error-container/20 hover:border-error text-on-surface transition-all duration-300 font-label-sm text-label-sm flex items-center justify-center gap-2" onclick="leaveGroup('${g.id}')">
+                    <button class="w-full py-3 rounded-lg border-1.5 border-outline hover:bg-error-container/20 hover:border-error text-on-surface transition-all duration-300 font-label-sm text-label-sm flex items-center justify-center gap-2" onclick="event.stopPropagation(); leaveGroup('${g.id}')">
                         <span class="material-symbols-outlined">logout</span>
                         Leave Group
                     </button>
@@ -268,6 +350,7 @@
         async function leaveGroup(id) {
             try {
                 await CineCircle.api(`/groups/${id}/leave`, { method: 'POST', body: { user_id: user.id } });
+                closeGroupModal();
                 await loadPlans();
             } catch (err) {
                 alert(err.message);
@@ -275,12 +358,147 @@
         }
 
         async function loadPlans() {
-            const groups = await CineCircle.api('/groups');
-            const mine = groups.filter(g => g.members.some(m => m.id === user.id));
+            myGroups = await CineCircle.api(`/groups/mine?user_id=${encodeURIComponent(user.id)}`);
             const grid = document.getElementById('joined-groups-grid');
-            grid.innerHTML = mine.map(planCard).join('');
-            checkEmptyState(mine.length);
+            grid.innerHTML = myGroups.map(planCard).join('');
+            checkEmptyState(myGroups.length);
         }
+
+        // ---- Group detail modal: Info / Chat / Polls ----
+        function switchModalTab(tab) {
+            ['info', 'chat', 'poll'].forEach(t => {
+                document.getElementById(`modal-panel-${t}`).classList.toggle('hidden', t !== tab);
+                const btn = document.querySelector(`[data-modal-tab="${t}"]`);
+                btn.classList.toggle('border-primary', t === tab);
+                btn.classList.toggle('text-primary', t === tab);
+                btn.classList.toggle('border-transparent', t !== tab);
+                btn.classList.toggle('text-on-surface-variant', t !== tab);
+            });
+        }
+
+        function openGroupModal(id) {
+            const g = myGroups.find(x => x.id === id);
+            if (!g) return;
+            activeGroup = g;
+
+            document.getElementById('modal-group-name').textContent = g.name;
+            document.getElementById('modal-info-movie').textContent = g.screening?.movie?.title || '';
+            document.getElementById('modal-info-cinema').textContent = `${g.screening?.cinema || ''} · ${g.screening?.format || ''}`;
+            document.getElementById('modal-info-time').textContent = g.screening?.show_time || '';
+            document.getElementById('modal-info-vibe').textContent = g.vibe;
+            document.getElementById('modal-info-spot').textContent = g.spot;
+            document.getElementById('modal-info-topic').textContent = `"${g.topic}"`;
+            document.getElementById('modal-info-members').innerHTML = g.members.map(m =>
+                `<span class="bg-surface-container-high px-3 py-1 rounded-full text-sm">${CineCircle.escapeHtml(m.name)}</span>`
+            ).join('');
+
+            switchModalTab('info');
+            document.getElementById('group-modal').classList.remove('hidden');
+            document.getElementById('group-modal').classList.add('flex');
+
+            loadChat();
+            loadPolls();
+        }
+
+        function closeGroupModal() {
+            document.getElementById('group-modal').classList.add('hidden');
+            document.getElementById('group-modal').classList.remove('flex');
+            activeGroup = null;
+            if (chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
+        }
+
+        // ---- Chat ----
+        async function loadChat() {
+            if (!activeGroup) return;
+            try {
+                const messages = await CineCircle.api(`/groups/${activeGroup.id}/messages`);
+                const feed = document.getElementById('modal-chat-feed');
+                feed.innerHTML = messages.length
+                    ? messages.map(m => `<div class="flex gap-2">
+                        <span class="font-bold text-sm text-primary flex-shrink-0">${CineCircle.escapeHtml(m.author?.name || '?')}:</span>
+                        <span class="text-sm text-on-surface">${CineCircle.escapeHtml(m.text)}</span>
+                      </div>`).join('')
+                    : '<p class="text-on-surface-variant text-sm">No messages yet — say hello!</p>';
+                feed.scrollTop = feed.scrollHeight;
+            } catch (err) { /* silent on background poll */ }
+        }
+
+        document.getElementById('modal-chat-send').addEventListener('click', async () => {
+            const input = document.getElementById('modal-chat-input');
+            const text = input.value.trim();
+            if (!text || !activeGroup) return;
+            input.value = '';
+            try {
+                await CineCircle.api(`/groups/${activeGroup.id}/messages`, { method: 'POST', body: { user_id: user.id, text } });
+                await loadChat();
+            } catch (err) { alert(err.message); }
+        });
+        document.getElementById('modal-chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('modal-chat-send').click();
+        });
+
+        // ---- Polls ----
+        function pollCard(p) {
+            const options = p.options.map(o => {
+                const pct = p.totalVotes ? Math.round((o.votes / p.totalVotes) * 100) : 0;
+                return `<button class="w-full text-left mb-2 relative" onclick="votePoll('${p.id}','${o.id}')">
+                    <div class="flex justify-between text-sm mb-1"><span>${CineCircle.escapeHtml(o.label)}</span><span class="text-on-surface-variant">${o.votes} vote${o.votes === 1 ? '' : 's'}</span></div>
+                    <div class="h-2 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
+                </button>`;
+            }).join('');
+            return `<div class="bg-surface-container-high/50 rounded-xl p-4">
+                <p class="font-title-md text-sm mb-3">${CineCircle.escapeHtml(p.question)}</p>
+                ${options}
+            </div>`;
+        }
+
+        async function loadPolls() {
+            if (!activeGroup) return;
+            try {
+                const polls = await CineCircle.api(`/groups/${activeGroup.id}/polls`);
+                document.getElementById('modal-polls-list').innerHTML = polls.length
+                    ? polls.map(pollCard).join('')
+                    : '<p class="text-on-surface-variant text-sm">No polls yet.</p>';
+            } catch (err) { /* silent on background poll */ }
+        }
+
+        async function votePoll(pollId, optionId) {
+            try {
+                await CineCircle.api(`/groups/polls/${pollId}/vote`, { method: 'POST', body: { user_id: user.id, option_id: optionId } });
+                await loadPolls();
+            } catch (err) { alert(err.message); }
+        }
+
+        document.getElementById('poll-add-option').addEventListener('click', () => {
+            const container = document.getElementById('poll-options-inputs');
+            const count = container.querySelectorAll('.poll-option-input').length + 1;
+            const input = document.createElement('input');
+            input.className = 'w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input';
+            input.placeholder = `Option ${count}`;
+            input.type = 'text';
+            container.appendChild(input);
+        });
+
+        document.getElementById('poll-create-btn').addEventListener('click', async () => {
+            const errorEl = document.getElementById('poll-error');
+            errorEl.classList.add('hidden');
+            const question = document.getElementById('poll-question').value.trim();
+            const options = [...document.querySelectorAll('.poll-option-input')].map(i => i.value.trim()).filter(Boolean);
+            if (!question || options.length < 2) {
+                errorEl.textContent = 'Add a question and at least 2 options.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            try {
+                await CineCircle.api(`/groups/${activeGroup.id}/polls`, { method: 'POST', body: { user_id: user.id, question, options } });
+                document.getElementById('poll-question').value = '';
+                document.querySelectorAll('.poll-option-input').forEach(i => i.value = '');
+                await loadPolls();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove('hidden');
+            }
+        });
 
         (async () => {
             const session = await CineCircle.requireSession();
@@ -288,6 +506,11 @@
             user = CineCircle.requireUser();
             if (!user) return;
             CineCircle.wireUserChip();
+
+            if (new URLSearchParams(window.location.search).get('requested')) {
+                document.getElementById('requested-banner').classList.remove('hidden');
+            }
+
             try {
                 await loadPlans();
             } catch (err) {

@@ -55,6 +55,10 @@ docs/API.md          Full API reference for wiring the frontend
 docs/STITCH_PROMPT.md  Ready-to-paste prompt for Google Stitch
 ```
 
+## v2: multiple movies, group requests, chat/polls, admin
+
+See `docs/V2_FEATURES.md` — run `supabase/migration_v2.sql`, then make yourself an admin.
+
 ## Sign-in (email/password + Google)
 
 See `docs/AUTH_SETUP.md` for the full walkthrough — you'll need to run one more SQL migration, grab your anon/publishable key, and (for Google) create OAuth credentials in Google Cloud Console.

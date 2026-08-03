@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin | CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { background-color: #10131f; background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.02) 1px, transparent 0); background-size: 32px 32px; }
+    .glass-card { background: rgba(22, 27, 48, 0.7); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); }
+    .tab-btn.active { color: #ffb3ad; border-color: #ffb3ad; }
+</style>
+<script id="tailwind-config">
+    tailwind.config = { darkMode: "class", theme: { extend: {
+        "colors": {
+            "surface": "#10131f", "surface-container-high": "#272936", "surface-variant": "#313442",
+            "tertiary-container": "#909191", "surface-container": "#1c1f2c", "on-surface": "#e0e1f3",
+            "primary": "#ffb3ad", "primary-container": "#ff544e", "secondary": "#b5c4ff",
+            "surface-container-lowest": "#0b0e1a", "on-surface-variant": "#e4bdba",
+            "error": "#ffb4ab", "error-container": "#93000a", "secondary-container": "#234193",
+            "background": "#10131f", "outline": "#ab8885"
+        },
+        "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        "spacing": { "card-gap": "20px", "container-margin": "24px", "section-padding": "40px" },
+        "fontFamily": { "display-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "body-md": ["Inter"], "label-sm": ["Inter"] },
+        "fontSize": {
+            "display-lg": ["48px", {"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"800"}],
+            "headline-lg": ["32px", {"lineHeight":"40px","fontWeight":"700"}],
+            "title-md": ["20px", {"lineHeight":"28px","fontWeight":"600"}],
+            "body-md": ["16px", {"lineHeight":"24px","fontWeight":"400"}],
+            "label-sm": ["12px", {"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}]
+        }
+    } } }
+</script>
+</head>
+<body class="font-body-md text-on-surface min-h-screen flex flex-col">
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10">
+<div class="max-w-5xl mx-auto px-container-margin py-4 flex justify-between items-center w-full">
+<a class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter" href="watch_groups.html">CineCircle</a>
+<div class="flex items-center gap-4">
+<span class="text-primary font-bold flex items-center gap-1"><span class="material-symbols-outlined">shield_person</span> Admin</span>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+</div>
+</div>
+</header>
+
+<main class="mt-[96px] flex-grow max-w-5xl mx-auto w-full px-container-margin pb-section-padding" id="admin-main">
+<h1 class="font-headline-lg text-headline-lg mb-2">Admin</h1>
+<p class="text-on-surface-variant mb-8">Approve group requests, manage movies, and moderate users.</p>
+
+<div class="flex border-b border-white/10 mb-8">
+<button class="tab-btn active px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="requests" onclick="switchTab('requests')">Group Requests</button>
+<button class="tab-btn px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="movies" onclick="switchTab('movies')">Movies</button>
+<button class="tab-btn px-5 py-3 font-title-md text-sm border-b-2 border-transparent text-on-surface-variant" data-tab="users" onclick="switchTab('users')">Users</button>
+</div>
+
+<!-- Group Requests -->
+<section id="tab-requests">
+<div id="requests-list" class="space-y-4"><p class="text-on-surface-variant">Loading…</p></div>
+</section>
+
+<!-- Movies -->
+<section class="hidden" id="tab-movies">
+<div id="movies-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"><p class="text-on-surface-variant">Loading…</p></div>
+<div class="glass-card rounded-2xl p-6">
+<h2 class="font-title-md text-title-md mb-4">Add a Movie</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="movie-title" placeholder="Title" type="text"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="movie-genre" placeholder="Genre (e.g. Action / Adventure)" type="text"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="movie-runtime" placeholder="Runtime (minutes)" type="number"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="movie-trailer" placeholder="YouTube trailer URL" type="text"/>
+<input class="sm:col-span-2 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="movie-poster" placeholder="Poster / hero image URL" type="text"/>
+</div>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="movie-add-btn">Add Movie</button>
+<p class="text-error text-sm hidden mt-3" id="movie-error"></p>
+<p class="text-secondary text-sm hidden mt-3" id="movie-success"></p>
+</div>
+</section>
+
+<!-- Users -->
+<section class="hidden" id="tab-users">
+<div id="users-list" class="space-y-3"><p class="text-on-surface-variant">Loading…</p></div>
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+    let user;
+
+    async function authedApi(fullPath, { method = 'GET', body } = {}) {
+        const token = await CineCircleAuth.getAccessToken();
+        const res = await fetch(fullPath, {
+            method,
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        return data;
+    }
+
+    const adminApi = (path, opts) => authedApi('/api/admin' + path, opts);
+
+    function switchTab(tab) {
+        ['requests', 'movies', 'users'].forEach(t => {
+            document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+            document.querySelector(`[data-tab="${t}"]`).classList.toggle('active', t === tab);
+        });
+    }
+
+    // ---- Group Requests ----
+    function requestCard(g) {
+        return `<div class="glass-card rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="text-secondary text-[11px] font-bold uppercase tracking-wider mb-1">${CineCircle.escapeHtml(g.screening?.movie?.title || '')}</div>
+                <div class="font-title-md text-title-md">${CineCircle.escapeHtml(g.name)}</div>
+                <div class="text-on-surface-variant text-sm">${CineCircle.escapeHtml(g.screening?.cinema || '')} · ${CineCircle.escapeHtml(g.screening?.show_time || '')} · ${CineCircle.escapeHtml(g.vibe)}</div>
+                <div class="text-on-surface-variant text-sm italic mt-1">Requested by ${CineCircle.escapeHtml(g.creator?.name || 'unknown')} (${CineCircle.escapeHtml(g.creator?.email || '')})</div>
+                <div class="text-on-surface-variant text-sm mt-1">Hangout: ${CineCircle.escapeHtml(g.spot)} — "${CineCircle.escapeHtml(g.topic)}"</div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+                <button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold text-sm" onclick="reviewGroup('${g.id}','approve')">Approve</button>
+                <button class="px-4 py-2 rounded-lg border border-error/40 text-error font-bold text-sm" onclick="reviewGroup('${g.id}','reject')">Reject</button>
+            </div>
+        </div>`;
+    }
+
+    async function loadRequests() {
+        const groups = await adminApi('/groups/pending');
+        document.getElementById('requests-list').innerHTML = groups.length
+            ? groups.map(requestCard).join('')
+            : '<p class="text-on-surface-variant">No pending requests. 🎉</p>';
+    }
+
+    async function reviewGroup(id, action) {
+        try {
+            await adminApi(`/groups/${id}/${action}`, { method: 'POST' });
+            await loadRequests();
+        } catch (err) { alert(err.message); }
+    }
+
+    // ---- Movies ----
+    function movieCard(m) {
+        return `<div class="glass-card rounded-xl p-4">
+            <div class="font-title-md text-title-md">${CineCircle.escapeHtml(m.title)}</div>
+            <div class="text-on-surface-variant text-sm">${CineCircle.escapeHtml(m.genre)} · ${m.runtime_minutes} min</div>
+        </div>`;
+    }
+
+    async function loadMovies() {
+        const movies = await CineCircle.api('/movies');
+        document.getElementById('movies-list').innerHTML = movies.length
+            ? movies.map(movieCard).join('')
+            : '<p class="text-on-surface-variant">No movies yet.</p>';
+    }
+
+    document.getElementById('movie-add-btn').addEventListener('click', async () => {
+        const errorEl = document.getElementById('movie-error');
+        const successEl = document.getElementById('movie-success');
+        errorEl.classList.add('hidden'); successEl.classList.add('hidden');
+        const title = document.getElementById('movie-title').value.trim();
+        if (!title) { errorEl.textContent = 'Title is required.'; errorEl.classList.remove('hidden'); return; }
+        try {
+            await authedApi('/api/movies', {
+                method: 'POST',
+                body: {
+                    title,
+                    genre: document.getElementById('movie-genre').value.trim(),
+                    runtime_minutes: Number(document.getElementById('movie-runtime').value) || 0,
+                    poster_url: document.getElementById('movie-poster').value.trim(),
+                    trailer_url: document.getElementById('movie-trailer').value.trim(),
+                },
+            });
+            ['movie-title','movie-genre','movie-runtime','movie-poster','movie-trailer'].forEach(id => document.getElementById(id).value = '');
+            successEl.textContent = 'Movie added!';
+            successEl.classList.remove('hidden');
+            await loadMovies();
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    // ---- Users ----
+    function userRow(u) {
+        return `<div class="glass-card rounded-xl p-4 flex items-center justify-between gap-4">
+            <div>
+                <div class="font-title-md text-sm">${CineCircle.escapeHtml(u.name || '(no name yet)')} ${u.is_admin ? '<span class="text-primary text-xs font-bold ml-2">ADMIN</span>' : ''} ${u.is_banned ? '<span class="text-error text-xs font-bold ml-2">BANNED</span>' : ''}</div>
+                <div class="text-on-surface-variant text-sm">${CineCircle.escapeHtml(u.email || '')}</div>
+            </div>
+            ${u.is_banned
+                ? `<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold text-sm flex-shrink-0" onclick="toggleBan('${u.id}', false)">Unban</button>`
+                : `<button class="px-4 py-2 rounded-lg border border-error/40 text-error font-bold text-sm flex-shrink-0" onclick="toggleBan('${u.id}', true)">Ban</button>`}
+        </div>`;
+    }
+
+    async function loadUsers() {
+        const users = await adminApi('/users');
+        document.getElementById('users-list').innerHTML = users.map(userRow).join('');
+    }
+
+    async function toggleBan(id, ban) {
+        if (ban && !confirm('Ban this user? They will be signed out and their content hidden.')) return;
+        try {
+            await adminApi(`/users/${id}/${ban ? 'ban' : 'unban'}`, { method: 'POST' });
+            await loadUsers();
+        } catch (err) { alert(err.message); }
+    }
+
+    (async () => {
+        const session = await CineCircle.requireSession();
+        if (!session) return;
+        user = CineCircle.requireUser();
+        if (!user) return;
+        if (!user.is_admin) {
+            document.getElementById('admin-main').innerHTML = '<p class="text-error text-center py-20">Admin access required.</p>';
+            return;
+        }
+        CineCircle.wireUserChip();
+        try {
+            await Promise.all([loadRequests(), loadMovies(), loadUsers()]);
+        } catch (err) {
+            document.getElementById('admin-main').innerHTML =
+                `<p class="text-error text-center py-20">Couldn't load admin data: ${CineCircle.escapeHtml(err.message)}</p>`;
+        }
+    })();
+</script>
+</body></html>

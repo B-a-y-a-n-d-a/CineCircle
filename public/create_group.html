@@ -147,8 +147,8 @@
 <!-- Modal Header -->
 <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-surface-container-low">
 <div>
-<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Create Watch Group</h2>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Gather your fellow cinephiles for a screening.</p>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Request a Watch Group</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">An admin reviews every request before it goes live for other cinephiles to join.</p>
 </div>
 <button class="p-2 hover:bg-surface-variant/50 rounded-full transition-colors text-on-surface-variant" id="close-btn" type="button">
 <span class="material-symbols-outlined">close</span>
@@ -163,12 +163,22 @@
 <label class="block font-label-sm text-label-sm text-on-surface mb-2" for="group-name">Group Name</label>
 <input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none transition-all placeholder:text-on-surface-variant/40 font-body-md text-body-md" id="group-name" placeholder="e.g. Web-Heads of Joburg" type="text"/>
 </div>
+<!-- Movie Dropdown -->
+<div class="md:col-span-2">
+<label class="block font-label-sm text-label-sm text-on-surface mb-2" for="movie">Movie</label>
+<div class="relative">
+<select class="appearance-none w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none transition-all font-body-md text-body-md" id="movie">
+<option value="">Loading movies…</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
 <!-- Screening Dropdown -->
 <div class="md:col-span-2">
 <label class="block font-label-sm text-label-sm text-on-surface mb-2" for="screening">Screening</label>
 <div class="relative">
 <select class="appearance-none w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none transition-all font-body-md text-body-md" id="screening">
-<option value="">Loading screenings…</option>
+<option value="">Choose a movie first</option>
 </select>
 <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
 </div>
@@ -209,7 +219,7 @@
                     Cancel
                 </button>
 <button class="w-full md:w-auto px-10 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 shadow-[0_0_20px_rgba(255,84,78,0.3)] transition-all active:scale-95 font-body-md text-body-md" id="submit-btn" type="submit" form="create-form">
-                    Create Group
+                    Submit Request
                 </button>
 </div>
 </div>
@@ -238,13 +248,32 @@
         document.getElementById('cancel-btn').addEventListener('click', () => window.location.href = 'watch_groups.html');
         document.getElementById('close-btn').addEventListener('click', () => window.location.href = 'watch_groups.html');
 
-        async function loadScreenings() {
-            const screenings = await CineCircle.api('/screenings');
+        let allScreenings = [];
+
+        async function loadScreeningsFor(movieId) {
             const select = document.getElementById('screening');
-            select.innerHTML = screenings.map(s =>
+            const matches = allScreenings.filter(s => String(s.movie_id) === String(movieId));
+            if (!movieId || matches.length === 0) {
+                select.innerHTML = '<option value="">No screenings for this movie yet</option>';
+                return;
+            }
+            select.innerHTML = matches.map(s =>
                 `<option value="${s.id}">${CineCircle.escapeHtml(s.cinema)} — ${CineCircle.escapeHtml(s.show_time)} — ${CineCircle.escapeHtml(s.format)}</option>`
             ).join('');
         }
+
+        async function loadMoviesAndScreenings() {
+            const [movies, screenings] = await Promise.all([
+                CineCircle.api('/movies'),
+                CineCircle.api('/screenings'),
+            ]);
+            allScreenings = screenings;
+            const movieSelect = document.getElementById('movie');
+            movieSelect.innerHTML = movies.map(m => `<option value="${m.id}">${CineCircle.escapeHtml(m.title)}</option>`).join('');
+            if (movies.length) await loadScreeningsFor(movies[0].id);
+        }
+
+        document.getElementById('movie').addEventListener('change', (e) => loadScreeningsFor(e.target.value));
 
         document.getElementById('create-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -253,20 +282,26 @@
             errorEl.classList.add('hidden');
 
             const name = document.getElementById('group-name').value.trim();
+            const screeningId = document.getElementById('screening').value;
             if (!name) {
                 errorEl.textContent = 'Please give your group a name.';
                 errorEl.classList.remove('hidden');
                 return;
             }
+            if (!screeningId) {
+                errorEl.textContent = 'Pick a movie with an available screening.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating…';
+            submitBtn.textContent = 'Submitting…';
             try {
                 await CineCircle.api('/groups', {
                     method: 'POST',
                     body: {
                         name,
-                        screening_id: Number(document.getElementById('screening').value),
+                        screening_id: Number(screeningId),
                         vibe: document.getElementById('vibe').value,
                         max_size: Number(document.getElementById('size').value) || 6,
                         spot: document.getElementById('hangout').value.trim(),
@@ -274,12 +309,12 @@
                         user_id: user.id,
                     },
                 });
-                window.location.href = 'watch_groups.html';
+                window.location.href = 'my_plans.html?requested=1';
             } catch (err) {
                 errorEl.textContent = err.message || 'Something went wrong. Try again.';
                 errorEl.classList.remove('hidden');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Group';
+                submitBtn.textContent = 'Submit Request';
             }
         });
 
@@ -290,7 +325,7 @@
             if (!user) return;
             CineCircle.wireUserChip();
             try {
-                await loadScreenings();
+                await loadMoviesAndScreenings();
             } catch (err) {
                 document.getElementById('screening').innerHTML = `<option value="">Couldn't load screenings</option>`;
             }
