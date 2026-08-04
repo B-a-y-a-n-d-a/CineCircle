@@ -1,26 +1,49 @@
 import { extractShowtimesFromPage } from './extract.js';
 import { chooseCinemaByText } from './siteHelpers.js';
 
-// Best-effort v1 — same caveats as sterkinekor.js. Nu Metro's homepage has a
-// "Choose a cinema" table of cinema names, which may be a <select> or plain
-// clickable rows; chooseCinemaByText() tries both.
-export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
+// v2 — the "Now Showing" homepage has no date picker at all (confirmed:
+// a full clickable-element dump came back with zero date-shaped text), so
+// it silently shows only today's showtimes. But it does link out to each
+// movie's own page (e.g. /movie/7045/ for "The Odyssey") — that's almost
+// certainly where the real cinema + date selection lives, similar to how
+// Ster-Kinekor's real showtimes only live inside its Quick Book widget.
+//
+// This drills into each of our target movies' own pages (only those two,
+// same "don't loop every movie" approach as Ster-Kinekor) and tries to
+// pick the cinema + the requested day there. Exact markup on the detail
+// page is still unconfirmed, so this stays generous with fallbacks and
+// dumps diagnostics whenever something doesn't resolve cleanly.
+
+function normalize(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function tokenSet(str) {
+  return new Set(normalize(str).split(' ').filter(Boolean));
+}
+// Anchor text on the now-showing page includes genre/runtime/rating noise
+// around the title, so we check "every word of the movie title shows up in
+// the link text" rather than an exact/ordered match.
+function titleTokensSubsetOf(movieTitle, linkText) {
+  const wanted = tokenSet(movieTitle);
+  const have = tokenSet(linkText);
+  if (!wanted.size) return false;
+  for (const t of wanted) if (!have.has(t)) return false;
+  return true;
+}
+
+const WEEKDAY_HINTS = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, targetMovies = []) {
   const page = await browser.newPage();
+  const results = [];
+  const diagnostics = { cinemaSelectedOnHome: false, movieAttempts: [] };
+
   try {
     await page.goto('https://www.numetro.co.za/', { waitUntil: 'networkidle', timeout: 30000 });
-
-    const selected = await chooseCinemaByText(page, cinemaSiteName);
-    if (!selected) return { ok: false, error: `Could not find cinema filter for "${cinemaSiteName}"`, url: page.url() };
+    diagnostics.cinemaSelectedOnHome = await chooseCinemaByText(page, cinemaSiteName);
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1500);
 
-    // The clickable-text dump from the last run had zero date-shaped text
-    // anywhere on the homepage — just nav links (Home, Now Showing, Coming
-    // Soon...). That suggests the homepage silently defaults to "today" and
-    // a date picker (if one exists) only shows up once you're actually on
-    // the "Now Showing" view, or once you're on an individual movie's own
-    // page. Try clicking into "Now Showing" first, in case that's what
-    // reveals it.
     const nowShowingLink = page.getByText('Now Showing', { exact: false }).first();
     if (await nowShowingLink.count().catch(() => 0)) {
       await nowShowingLink.click({ timeout: 5000 }).catch(() => {});
@@ -28,47 +51,79 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
       await page.waitForTimeout(1500);
     }
 
-    const dateButtons = page.locator('[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i]');
-    const dateButtonsFound = await dateButtons.count().catch(() => 0);
-    if (dateButtonsFound > dayIndex) {
-      await dateButtons.nth(dayIndex).click({ timeout: 5000 }).catch(() => {});
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-      await page.waitForTimeout(1500);
+    // Find each target movie's own detail page URL from the now-showing grid.
+    const movieLinks = await page.evaluate(() => {
+      const anchors = Array.from(document.querySelectorAll('a'));
+      return anchors
+        .map((a) => ({ text: (a.textContent || '').trim(), href: a.getAttribute('href') }))
+        .filter((a) => a.text && a.href && a.href.includes('/movie/'));
+    }).catch(() => []);
+
+    for (const movie of targetMovies) {
+      const link = movieLinks.find((l) => titleTokensSubsetOf(movie.title, l.text));
+      const attempt = { title: movie.title, linkFound: !!link, cinemaSelected: false, timesFound: 0 };
+      if (!link) {
+        diagnostics.movieAttempts.push(attempt);
+        continue;
+      }
+
+      try {
+        const detailUrl = new URL(link.href, 'https://www.numetro.co.za/').toString();
+        await page.goto(detailUrl, { waitUntil: 'networkidle', timeout: 30000 });
+        await page.waitForTimeout(1500);
+
+        attempt.cinemaSelected = await chooseCinemaByText(page, cinemaSiteName);
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await page.waitForTimeout(1500);
+
+        // Try a few likely shapes for a date picker on the detail page.
+        const dateButtons = page.locator(
+          '[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i], [class*="tab" i] button'
+        );
+        const dateButtonsFound = await dateButtons.count().catch(() => 0);
+        attempt.dateButtonsFound = dateButtonsFound;
+        if (dateButtonsFound > dayIndex) {
+          await dateButtons.nth(dayIndex).click({ timeout: 5000 }).catch(() => {});
+          await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+          await page.waitForTimeout(1500);
+        } else {
+          // No obvious button-based date picker — check for a <select> with
+          // weekday-ish options instead (same pattern Ster-Kinekor used).
+          const selects = page.locator('select');
+          const selectCount = await selects.count().catch(() => 0);
+          for (let i = 0; i < selectCount; i++) {
+            const options = await selects.nth(i).locator('option').allTextContents().catch(() => []);
+            const looksLikeDates = options.some((o) => WEEKDAY_HINTS.some((h) => normalize(o).includes(h)));
+            if (looksLikeDates && options.length > dayIndex) {
+              await selects.nth(i).selectOption({ index: dayIndex }).catch(() => {});
+              attempt.dateSelectUsed = true;
+              await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+              await page.waitForTimeout(1500);
+              break;
+            }
+          }
+        }
+
+        const cards = await extractShowtimesFromPage(page);
+        const times = cards.length ? cards[0].times : [];
+        attempt.timesFound = times.length;
+        if (times.length) {
+          results.push({ title: movie.title, times, format: cards[0].format || '2D' });
+        } else {
+          attempt.clickableTexts = await page.evaluate(() => {
+            const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
+            return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 60);
+          }).catch(() => []);
+        }
+      } catch (err) {
+        attempt.error = err.message;
+      }
+      diagnostics.movieAttempts.push(attempt);
     }
 
-    const results = await extractShowtimesFromPage(page);
-    const diagnostics = { dateButtonsFound, urlAfterCinemaSelect: page.url() };
-
-    // dateButtonsFound is always 0, meaning our selector guess doesn't match
-    // whatever Nu Metro actually uses for its date picker. Instead of
-    // guessing another CSS selector blind, dump every clickable-looking
-    // element's text so the real markup shows up in the next log — same
-    // "look at the diagnostics, then fix precisely" approach that got
-    // Ster-Kinekor working.
-    if (dayIndex === 0 || results.length === 0) {
-      diagnostics.clickableTexts = await page.evaluate(() => {
-        const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
-        return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 80);
-      }).catch(() => []);
-
-      // Also grab any link that looks like it points at one of our two
-      // target movies specifically — if Nu Metro's date picker lives on
-      // each movie's own page (like Ster-Kinekor's Quick Book), this gives
-      // us the URL to go try next.
-      diagnostics.movieLinks = await page.evaluate(() => {
-        const anchors = Array.from(document.querySelectorAll('a'));
-        return anchors
-          .map((a) => ({ text: (a.textContent || '').trim(), href: a.getAttribute('href') }))
-          .filter((a) => a.text && a.href && /spider|odyssey/i.test(a.text))
-          .slice(0, 10);
-      }).catch(() => []);
-    }
-    if (results.length === 0) {
-      diagnostics.pageTextSnippet = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 400)).catch(() => '');
-    }
     return { ok: true, results, url: page.url(), diagnostics };
   } catch (err) {
-    return { ok: false, error: err.message, url: page.url() };
+    return { ok: false, error: err.message, url: page.url(), diagnostics };
   } finally {
     await page.close();
   }

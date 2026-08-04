@@ -58,7 +58,7 @@ export async function runScrape({ triggeredBy } = {}) {
 
         const scrape = cinema.chain === 'sterkinekor'
           ? await scrapeSterKinekorCinema(browser, cinema.siteName, dayIndex, movies)
-          : await scrapeNuMetroCinema(browser, cinema.siteName, dayIndex);
+          : await scrapeNuMetroCinema(browser, cinema.siteName, dayIndex, movies);
 
         if (!scrape.ok) {
           console.warn(`[scraper] FAILED ${cinema.displayName} (${scrape.url}): ${scrape.error}`);
