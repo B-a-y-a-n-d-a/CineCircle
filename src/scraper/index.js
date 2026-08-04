@@ -65,12 +65,15 @@ export async function runScrape({ triggeredBy } = {}) {
           continue;
         }
 
+        console.log(`[scraper]   found ${scrape.results.length} movie card(s): ${scrape.results.map(r => `${r.title} (${r.times.length} time${r.times.length === 1 ? '' : 's'})`).join(', ') || 'none'}`);
+
         for (const item of scrape.results) {
           const movie = matchMovie(item.title, movies);
           if (!movie) {
             summary.unmatchedMovies.add(item.title);
             continue;
           }
+          console.log(`[scraper]     matched "${item.title}" -> movie #${movie.id} (${movie.title})`);
           for (const time of item.times) {
             newRows.push({
               cinema: cinema.displayName,
