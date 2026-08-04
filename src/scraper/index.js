@@ -66,9 +66,10 @@ export async function runScrape({ triggeredBy } = {}) {
         }
 
         if (scrape.diagnostics) {
-          const { pageTextSnippet, ...rest } = scrape.diagnostics;
+          const { pageTextSnippet, pageTextEnd, ...rest } = scrape.diagnostics;
           console.log(`[scraper]   diagnostics: ${JSON.stringify(rest)}`);
-          if (pageTextSnippet) console.log(`[scraper]   page text snippet: ${pageTextSnippet}`);
+          if (pageTextSnippet) console.log(`[scraper]   page text START: ${pageTextSnippet}`);
+          if (pageTextEnd) console.log(`[scraper]   page text END: ${pageTextEnd}`);
         }
         console.log(`[scraper]   found ${scrape.results.length} movie card(s): ${scrape.results.map(r => `${r.title} (${r.times.length} time${r.times.length === 1 ? '' : 's'}: ${r.times.join(', ')})`).join(', ') || 'none'}`);
 

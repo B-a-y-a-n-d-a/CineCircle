@@ -44,7 +44,17 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex)
 
     const diagnostics = { usedFallback };
     if (results.length === 0) {
+      // Cheap but decisive check: does ANY HH:MM-shaped text exist anywhere on
+      // the page at all? If not, this page simply doesn't list showtimes
+      // (likely a movie-only grid where you must click into a movie first to
+      // pick cinema/date/time) — a structural difference, not a selector bug.
+      diagnostics.anyTimeStringsOnPage = await page.evaluate(() => {
+        const text = document.body.innerText || '';
+        const matches = text.match(/\b([01]?\d|2[0-3]):[0-5]\d\b/g) || [];
+        return matches.length;
+      }).catch(() => -1);
       diagnostics.pageTextSnippet = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 500)).catch(() => '');
+      diagnostics.pageTextEnd = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(-500)).catch(() => '');
     }
     return { ok: true, results, url: page.url(), diagnostics };
   } catch (err) {
