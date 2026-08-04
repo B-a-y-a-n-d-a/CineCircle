@@ -1,36 +1,39 @@
-import { extractShowtimesFromPage } from './extract.js';
 import { listSelects, selectOptionContaining, selectCustomDropdown } from './siteHelpers.js';
 
-// v4 — decisive finding from v3's diagnostics: the "now showing" page only
-// ever lists movie *names*, never real showtimes. Real times only exist
-// inside Ster-Kinekor's "Quick Book" widget, and that widget only reveals
-// them after you pick, in order: cinema -> movie -> cinema type -> date ->
-// showtime. Each step's options only populate once the previous one is set
-// (a dependent-dropdown flow), which is why nothing showed up before.
+// v5 — v4 confirmed the Quick Book flow works (cinema -> movie -> cinema
+// type -> date all select correctly), but two problems showed up in the
+// first live run:
 //
-// To keep this fast, we only drill into the specific movies we care about
-// (passed in as `targetMovies`, i.e. our own `movies` table) instead of
-// looping over every movie the cinema is showing.
+// 1. The two movies at the same cinema/date came back with the exact same
+//    18 times, and those times (01:45, 02:15, ... 08:30) look like a fixed
+//    half-hourly grid rather than real screenings. That's the fingerprint
+//    of the old full-page-text fallback in readShowtimesNearby() picking up
+//    a static/template time list still sitting in the DOM (e.g. an
+//    unrelated hidden <select>'s options), not the actual showtime picker.
+// 2. On the 3rd movie attempt in a row, the widget itself broke ("Quick
+//    Book loading..." forever) — reusing the same widget instance across
+//    multiple movie selections without resetting it eventually desyncs it.
 //
-// We don't know for certain whether these widget fields are native
-// <select> elements or Angular Material-style custom dropdowns, so each
-// step tries both: selectOptionContaining() for real <select>s, falling
-// back to selectCustomDropdown() for click-to-open overlay pickers.
+// Fixes: (a) reload the page and reselect the cinema fresh before *every*
+// movie attempt, so each one starts from a clean widget instead of
+// mutating the same one repeatedly; (b) instead of scanning the whole
+// page for any HH:MM text, snapshot every <select>'s options right before
+// picking the date, snapshot again right after, and only trust options
+// that are genuinely NEW post-date-selection and look like real times —
+// that's the actual showtime picker, not a leftover static list.
 async function pick(page, fieldHint, valueText) {
   if (await selectOptionContaining(page, valueText)) return true;
   return selectCustomDropdown(page, fieldHint, valueText);
 }
 
 const WEEKDAY_HINTS = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
 
 function normalize(str) {
   return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
 async function findDateOptionText(page, dayIndex) {
-  // Look across all selects for one whose options look date-like (contains a
-  // weekday name, "today"/"tomorrow", or a DD pattern), then return the
-  // option text at `dayIndex` within that select.
   const selects = await listSelects(page);
   for (const s of selects) {
     const looksLikeDates = s.options.some((o) => WEEKDAY_HINTS.some((h) => normalize(o).includes(h)));
@@ -41,38 +44,42 @@ async function findDateOptionText(page, dayIndex) {
   return null;
 }
 
-async function readShowtimesNearby(page) {
-  // After cinema+movie+type+date are all chosen, whatever times appear are
-  // real. Reuse the generic card extractor first; if it finds nothing (e.g.
-  // times render as a flat button row with no nearby heading), fall back to
-  // a plain page-wide time-string scan.
-  const cards = await extractShowtimesFromPage(page);
-  if (cards.length) return cards[0].times;
+// Real showtime options should (a) look like HH:MM and (b) not have been
+// present, in that exact set, before the date was picked. Comparing whole
+// selects (not just individual options) also lets us catch "this select
+// didn't exist before" as a signal, not just "this option is new".
+function findNewTimeOptions(beforeSelects, afterSelects) {
+  for (const after of afterSelects) {
+    const timeOptions = after.options.filter((o) => TIME_RE.test(o.trim()));
+    if (timeOptions.length === 0) continue;
 
-  return page.evaluate(() => {
-    const TIME_RE = /\b([01]?\d|2[0-3]):([0-5]\d)\b/g;
-    const text = document.body.innerText || '';
-    return [...new Set([...text.matchAll(TIME_RE)].map((m) => `${m[1].padStart(2, '0')}:${m[2]}`))];
-  }).catch(() => []);
+    const before = beforeSelects.find((b) => b.index === after.index);
+    const beforeSet = new Set(before ? before.options : []);
+    const isNew = timeOptions.some((t) => !beforeSet.has(t));
+    if (isNew || !before) return timeOptions;
+  }
+  return [];
 }
 
 export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex, targetMovies = []) {
   const page = await browser.newPage();
   const results = [];
   const diagnostics = { cinemaSelected: false, movieAttempts: [] };
+  const url = `https://www.sterkinekor.com/actual-content?tab=now-showing&cinema=${cinemaSiteName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
   try {
-    const slug = cinemaSiteName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    await page.goto(`https://www.sterkinekor.com/actual-content?tab=now-showing&cinema=${slug}`, {
-      waitUntil: 'networkidle', timeout: 30000,
-    });
-    await page.waitForTimeout(1500);
-
-    diagnostics.cinemaSelected = await pick(page, 'cinema', cinemaSiteName);
-    await page.waitForTimeout(1500);
-
     for (const movie of targetMovies) {
-      const attempt = { title: movie.title, movieSelected: false, dateSelected: false, timesFound: 0 };
+      const attempt = { title: movie.title, cinemaSelected: false, movieSelected: false, dateSelected: false, timesFound: 0 };
       try {
+        // Fresh page state per movie — avoids the widget desyncing after
+        // being driven through multiple selections in a row.
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+        await page.waitForTimeout(1500);
+
+        attempt.cinemaSelected = await pick(page, 'cinema', cinemaSiteName);
+        diagnostics.cinemaSelected = diagnostics.cinemaSelected || attempt.cinemaSelected;
+        await page.waitForTimeout(1500);
+
         attempt.movieSelected = await pick(page, 'movie', movie.title);
         if (!attempt.movieSelected) {
           diagnostics.movieAttempts.push(attempt);
@@ -80,22 +87,28 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
         }
         await page.waitForTimeout(1200);
 
-        // Cinema type: pick 2D by default if that field exists at all — we
-        // want the plain showing, not IMAX/D-BOX/etc, to keep one row per
-        // showtime simple. If there's no such field yet, skip it.
         await pick(page, 'cinema type', '2D');
         await page.waitForTimeout(800);
 
+        const beforeDateSelects = await listSelects(page);
         const dateOptionText = await findDateOptionText(page, dayIndex);
-        if (dateOptionText) {
-          attempt.dateSelected = await pick(page, 'date', dateOptionText);
-          await page.waitForTimeout(1200);
+        if (!dateOptionText) {
+          diagnostics.movieAttempts.push(attempt);
+          continue;
         }
 
-        const times = await readShowtimesNearby(page);
+        attempt.dateSelected = await pick(page, 'date', dateOptionText);
+        await page.waitForTimeout(1200);
+
+        const afterDateSelects = await listSelects(page);
+        const times = findNewTimeOptions(beforeDateSelects, afterDateSelects);
         attempt.timesFound = times.length;
         if (times.length) {
           results.push({ title: movie.title, times, format: '2D' });
+        } else {
+          // Keep this so we can see, next round, whether a showtime-shaped
+          // select existed at all but just had no *new* options.
+          attempt.postDateSelects = afterDateSelects.map((s) => s.options).filter((o) => o.length);
         }
       } catch (err) {
         attempt.error = err.message;
