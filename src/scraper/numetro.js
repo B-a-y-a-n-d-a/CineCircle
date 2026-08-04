@@ -14,6 +14,20 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(2000);
 
+    // The clickable-text dump from the last run had zero date-shaped text
+    // anywhere on the homepage — just nav links (Home, Now Showing, Coming
+    // Soon...). That suggests the homepage silently defaults to "today" and
+    // a date picker (if one exists) only shows up once you're actually on
+    // the "Now Showing" view, or once you're on an individual movie's own
+    // page. Try clicking into "Now Showing" first, in case that's what
+    // reveals it.
+    const nowShowingLink = page.getByText('Now Showing', { exact: false }).first();
+    if (await nowShowingLink.count().catch(() => 0)) {
+      await nowShowingLink.click({ timeout: 5000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+
     const dateButtons = page.locator('[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i]');
     const dateButtonsFound = await dateButtons.count().catch(() => 0);
     if (dateButtonsFound > dayIndex) {
@@ -35,6 +49,18 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
       diagnostics.clickableTexts = await page.evaluate(() => {
         const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
         return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 80);
+      }).catch(() => []);
+
+      // Also grab any link that looks like it points at one of our two
+      // target movies specifically — if Nu Metro's date picker lives on
+      // each movie's own page (like Ster-Kinekor's Quick Book), this gives
+      // us the URL to go try next.
+      diagnostics.movieLinks = await page.evaluate(() => {
+        const anchors = Array.from(document.querySelectorAll('a'));
+        return anchors
+          .map((a) => ({ text: (a.textContent || '').trim(), href: a.getAttribute('href') }))
+          .filter((a) => a.text && a.href && /spider|odyssey/i.test(a.text))
+          .slice(0, 10);
       }).catch(() => []);
     }
     if (results.length === 0) {
