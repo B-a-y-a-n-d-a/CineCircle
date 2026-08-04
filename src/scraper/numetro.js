@@ -24,6 +24,19 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex) {
 
     const results = await extractShowtimesFromPage(page);
     const diagnostics = { dateButtonsFound, urlAfterCinemaSelect: page.url() };
+
+    // dateButtonsFound is always 0, meaning our selector guess doesn't match
+    // whatever Nu Metro actually uses for its date picker. Instead of
+    // guessing another CSS selector blind, dump every clickable-looking
+    // element's text so the real markup shows up in the next log — same
+    // "look at the diagnostics, then fix precisely" approach that got
+    // Ster-Kinekor working.
+    if (dayIndex === 0 || results.length === 0) {
+      diagnostics.clickableTexts = await page.evaluate(() => {
+        const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
+        return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 80);
+      }).catch(() => []);
+    }
     if (results.length === 0) {
       diagnostics.pageTextSnippet = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 400)).catch(() => '');
     }
