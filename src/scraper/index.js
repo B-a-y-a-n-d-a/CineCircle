@@ -57,7 +57,7 @@ export async function runScrape({ triggeredBy } = {}) {
         console.log(`[scraper] ${cinema.displayName} — ${isoDate(date)}`);
 
         const scrape = cinema.chain === 'sterkinekor'
-          ? await scrapeSterKinekorCinema(browser, cinema.siteName, dayIndex)
+          ? await scrapeSterKinekorCinema(browser, cinema.siteName, dayIndex, movies)
           : await scrapeNuMetroCinema(browser, cinema.siteName, dayIndex);
 
         if (!scrape.ok) {

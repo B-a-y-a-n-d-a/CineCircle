@@ -41,4 +41,12 @@ I'll adjust the click targets and the extraction heuristic in `src/scraper/extra
 
 ## 6. Which cinemas are covered
 
-Edit `src/scraper/config.js` to add or change cinemas — each entry needs the exact-ish name as it appears on the site (used for a text-based click) and which city/display name to store in our database.
+CineCircle is scoped to **Gauteng only** — cinemas, screenings, and groups. `src/scraper/config.js` now lists only Gauteng Ster-Kinekor and Nu Metro branches (Sandton, Cresta, Fourways, Menlyn Park, Hyde Park, Clearwater, Emperors Palace). Edit that file to add or change cinemas — each entry needs the exact-ish name as it appears on the site and which city/display name to store in our database. If you ever expand beyond Gauteng, also update `GAUTENG_CITIES` in the same file.
+
+Run `supabase/migration_v4.sql` once (SQL Editor → paste → Run) to remove the old out-of-Gauteng seed screenings (Durban, Cape Town, Gqeberha) and any groups built on them — it logs which groups get removed before deleting.
+
+## 7. Ster-Kinekor's real showtime flow
+
+Confirmed by inspecting the live site: the "now showing" page only lists movie *names*, never real times. Actual showtimes only appear inside the "Quick Book" widget, and only after picking, in order: cinema → movie → cinema type → date → showtime — each step's options only populate once the previous one is chosen.
+
+`src/scraper/sterkinekor.js` now drives that full sequence, but only for the two movies in our `movies` table (not every movie the cinema shows, to keep it fast). It tries both native `<select>` dropdowns and Angular-Material-style click-to-open pickers at each step, since we don't yet know for certain which the site uses for movie/date/showtime. **This will likely need another round of log-sharing** to nail down the exact widget behavior — same iterate-together process as before.
