@@ -26,6 +26,23 @@ function normalize(str) {
   return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+// Ster-Kinekor lists some titles article-last, cinema-style ("Odyssey, The"
+// instead of "The Odyssey") — confirmed live: our own "The Odyssey" never
+// matched the site's "Odyssey, The" with a plain substring check. Comparing
+// as unordered word sets instead of ordered substrings sidesteps that (and
+// any other word-order quirks) without needing chain-specific regexes.
+function tokenSet(str) {
+  return new Set(normalize(str).split(' ').filter(Boolean));
+}
+function tokensMatch(a, b) {
+  const setA = tokenSet(a);
+  const setB = tokenSet(b);
+  if (!setA.size || !setB.size) return false;
+  const [smaller, larger] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
+  for (const t of smaller) if (!larger.has(t)) return false;
+  return true;
+}
+
 // Finds the <select> whose first (placeholder) option matches `placeholder`,
 // and picks the option inside it matching `valueText` (if given) or at
 // `optionIndex` (1-based among the real, non-placeholder options).
@@ -42,8 +59,7 @@ async function selectQuickBookField(page, placeholder, { valueText, optionIndex 
 
     let matchIndex = -1;
     if (valueText) {
-      const wanted = normalize(valueText);
-      matchIndex = realOptions.findIndex((o) => normalize(o).includes(wanted) || wanted.includes(normalize(o)));
+      matchIndex = realOptions.findIndex((o) => tokensMatch(o, valueText));
     } else if (typeof optionIndex === 'number') {
       matchIndex = realOptions.length > optionIndex ? optionIndex : -1;
     }
@@ -53,6 +69,24 @@ async function selectQuickBookField(page, placeholder, { valueText, optionIndex 
     return { found: true, set: true, selectedText: realOptions[matchIndex], options: realOptions };
   }
   return { found: false, set: false, reason: 'select-not-found' };
+}
+
+// Instead of a blind fixed sleep, poll until the named placeholder-select
+// actually has more than just its placeholder option (or we give up) — the
+// last run showed inconsistent load times between fields, so a fixed wait
+// sometimes checked before the next field had finished populating.
+async function waitForRealOptions(page, placeholder, maxWaitMs = 6000) {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const selects = page.locator('select');
+    const count = await selects.count().catch(() => 0);
+    for (let i = 0; i < count; i++) {
+      const options = await selects.nth(i).locator('option').allTextContents().catch(() => []);
+      if (options.length > 1 && normalize(options[0]) === normalize(placeholder)) return true;
+    }
+    await page.waitForTimeout(300);
+  }
+  return false;
 }
 
 export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex, targetMovies = []) {
@@ -78,7 +112,7 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
           diagnostics.movieAttempts.push(attempt);
           continue;
         }
-        await page.waitForTimeout(1500);
+        await waitForRealOptions(page, 'Select movie');
 
         const movieResult = await selectQuickBookField(page, 'Select movie', { valueText: movie.title });
         attempt.movieSelected = movieResult.set;
@@ -87,7 +121,7 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
           diagnostics.movieAttempts.push(attempt);
           continue;
         }
-        await page.waitForTimeout(1200);
+        await waitForRealOptions(page, 'Choose a cinema type');
 
         const typeResult = await selectQuickBookField(page, 'Choose a cinema type', { valueText: '2D' });
         attempt.typeSelected = typeResult.set;
@@ -97,7 +131,7 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
           const fallbackType = await selectQuickBookField(page, 'Choose a cinema type', { optionIndex: 0 });
           attempt.typeSelected = fallbackType.set;
         }
-        await page.waitForTimeout(1000);
+        await waitForRealOptions(page, 'Choose a date');
 
         const dateResult = await selectQuickBookField(page, 'Choose a date', { optionIndex: dayIndex });
         attempt.dateSelected = dateResult.set;
@@ -106,7 +140,7 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
           diagnostics.movieAttempts.push(attempt);
           continue;
         }
-        await page.waitForTimeout(1500);
+        await waitForRealOptions(page, 'Choose a showtime');
 
         const showtimeSelect = page.locator('select').filter({ hasText: 'Choose a showtime' });
         const showtimeOptions = await showtimeSelect.first().locator('option').allTextContents().catch(() => []);
