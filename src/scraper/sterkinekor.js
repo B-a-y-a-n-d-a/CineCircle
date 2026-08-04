@@ -1,64 +1,58 @@
-import { listSelects, selectOptionContaining, selectCustomDropdown } from './siteHelpers.js';
-
-// v5 — v4 confirmed the Quick Book flow works (cinema -> movie -> cinema
-// type -> date all select correctly), but two problems showed up in the
-// first live run:
+// v6 — the v5 diagnostics finally show exactly what's going on. The page has
+// TWO cinema-name selects: the "now showing" browsing filter (placeholder
+// "All locations") and the Quick Book widget's OWN cinema field (placeholder
+// "Select your cinema"). Our old matcher grabbed whichever came first in DOM
+// order — the browsing filter — every time, so the Quick Book's own cinema
+// field was never actually set. Same risk applies to "cinema type" (there's
+// a browsing-filter version AND a Quick Book version with identical option
+// text). That's why "Choose a date" / "Choose a showtime" never populated:
+// the Quick Book widget itself never got a real cinema selection.
 //
-// 1. The two movies at the same cinema/date came back with the exact same
-//    18 times, and those times (01:45, 02:15, ... 08:30) look like a fixed
-//    half-hourly grid rather than real screenings. That's the fingerprint
-//    of the old full-page-text fallback in readShowtimesNearby() picking up
-//    a static/template time list still sitting in the DOM (e.g. an
-//    unrelated hidden <select>'s options), not the actual showtime picker.
-// 2. On the 3rd movie attempt in a row, the widget itself broke ("Quick
-//    Book loading..." forever) — reusing the same widget instance across
-//    multiple movie selections without resetting it eventually desyncs it.
+// Also: the old generic "click anything that looks like a dropdown and
+// contains this text" fallback was matching unrelated elements elsewhere on
+// the page (e.g. the movie's own title text sitting in a footer/list) and
+// reporting false success. Every field on this page is confirmed to be a
+// plain native <select> — there is no evidence of a custom widget anywhere
+// in the diagnostics — so that fallback is removed entirely.
 //
-// Fixes: (a) reload the page and reselect the cinema fresh before *every*
-// movie attempt, so each one starts from a clean widget instead of
-// mutating the same one repeatedly; (b) instead of scanning the whole
-// page for any HH:MM text, snapshot every <select>'s options right before
-// picking the date, snapshot again right after, and only trust options
-// that are genuinely NEW post-date-selection and look like real times —
-// that's the actual showtime picker, not a leftover static list.
-async function pick(page, fieldHint, valueText) {
-  if (await selectOptionContaining(page, valueText)) return true;
-  return selectCustomDropdown(page, fieldHint, valueText);
-}
-
-const WEEKDAY_HINTS = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d$/;
+// New strategy: identify each Quick Book select by its own placeholder
+// text ("Select your cinema" / "Select movie" / "Choose a cinema type" /
+// "Choose a date" / "Choose a showtime") instead of by option content, since
+// several selects on this page share overlapping option content. Once
+// "Choose a showtime" is reached, its own options ARE the real times — no
+// more heuristics needed.
 
 function normalize(str) {
   return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-async function findDateOptionText(page, dayIndex) {
-  const selects = await listSelects(page);
-  for (const s of selects) {
-    const looksLikeDates = s.options.some((o) => WEEKDAY_HINTS.some((h) => normalize(o).includes(h)));
-    if (looksLikeDates && s.options.length > dayIndex) {
-      return s.options[dayIndex];
+// Finds the <select> whose first (placeholder) option matches `placeholder`,
+// and picks the option inside it matching `valueText` (if given) or at
+// `optionIndex` (1-based among the real, non-placeholder options).
+async function selectQuickBookField(page, placeholder, { valueText, optionIndex } = {}) {
+  const selects = page.locator('select');
+  const count = await selects.count().catch(() => 0);
+  for (let i = 0; i < count; i++) {
+    const select = selects.nth(i);
+    const options = await select.locator('option').allTextContents().catch(() => []);
+    if (!options.length || normalize(options[0]) !== normalize(placeholder)) continue;
+
+    const realOptions = options.slice(1);
+    if (!realOptions.length) return { found: true, set: false, reason: 'no-real-options-yet', options };
+
+    let matchIndex = -1;
+    if (valueText) {
+      const wanted = normalize(valueText);
+      matchIndex = realOptions.findIndex((o) => normalize(o).includes(wanted) || wanted.includes(normalize(o)));
+    } else if (typeof optionIndex === 'number') {
+      matchIndex = realOptions.length > optionIndex ? optionIndex : -1;
     }
-  }
-  return null;
-}
+    if (matchIndex === -1) return { found: true, set: false, reason: 'no-matching-option', options: realOptions };
 
-// Real showtime options should (a) look like HH:MM and (b) not have been
-// present, in that exact set, before the date was picked. Comparing whole
-// selects (not just individual options) also lets us catch "this select
-// didn't exist before" as a signal, not just "this option is new".
-function findNewTimeOptions(beforeSelects, afterSelects) {
-  for (const after of afterSelects) {
-    const timeOptions = after.options.filter((o) => TIME_RE.test(o.trim()));
-    if (timeOptions.length === 0) continue;
-
-    const before = beforeSelects.find((b) => b.index === after.index);
-    const beforeSet = new Set(before ? before.options : []);
-    const isNew = timeOptions.some((t) => !beforeSet.has(t));
-    if (isNew || !before) return timeOptions;
+    await select.selectOption({ index: matchIndex + 1 }).catch(() => {});
+    return { found: true, set: true, selectedText: realOptions[matchIndex], options: realOptions };
   }
-  return [];
+  return { found: false, set: false, reason: 'select-not-found' };
 }
 
 export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex, targetMovies = []) {
@@ -69,55 +63,62 @@ export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex,
 
   try {
     for (const movie of targetMovies) {
-      const attempt = { title: movie.title, cinemaSelected: false, movieSelected: false, dateSelected: false, timesFound: 0 };
+      const attempt = { title: movie.title, cinemaSelected: false, movieSelected: false, typeSelected: false, dateSelected: false, timesFound: 0 };
       try {
-        // Fresh page state per movie — avoids the widget desyncing after
-        // being driven through multiple selections in a row.
+        // Fresh page per movie — a shared widget instance desynced after a
+        // few selections in a row during the last run.
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
         await page.waitForTimeout(1500);
 
-        attempt.cinemaSelected = await pick(page, 'cinema', cinemaSiteName);
-        diagnostics.cinemaSelected = diagnostics.cinemaSelected || attempt.cinemaSelected;
+        const cinemaResult = await selectQuickBookField(page, 'Select your cinema', { valueText: cinemaSiteName });
+        attempt.cinemaSelected = cinemaResult.set;
+        diagnostics.cinemaSelected = diagnostics.cinemaSelected || cinemaResult.set;
+        if (!cinemaResult.set) {
+          attempt.cinemaResult = cinemaResult;
+          diagnostics.movieAttempts.push(attempt);
+          continue;
+        }
         await page.waitForTimeout(1500);
 
-        attempt.movieSelected = await pick(page, 'movie', movie.title);
-        if (!attempt.movieSelected) {
+        const movieResult = await selectQuickBookField(page, 'Select movie', { valueText: movie.title });
+        attempt.movieSelected = movieResult.set;
+        if (!movieResult.set) {
+          attempt.movieResult = movieResult;
           diagnostics.movieAttempts.push(attempt);
           continue;
         }
         await page.waitForTimeout(1200);
 
-        await pick(page, 'cinema type', '2D');
-        await page.waitForTimeout(800);
+        const typeResult = await selectQuickBookField(page, 'Choose a cinema type', { valueText: '2D' });
+        attempt.typeSelected = typeResult.set;
+        // If there's no 2D option (e.g. an IMAX-only screen), fall back to
+        // whichever cinema type comes first rather than giving up entirely.
+        if (!typeResult.set && typeResult.found && typeResult.reason === 'no-matching-option') {
+          const fallbackType = await selectQuickBookField(page, 'Choose a cinema type', { optionIndex: 0 });
+          attempt.typeSelected = fallbackType.set;
+        }
+        await page.waitForTimeout(1000);
 
-        const beforeDateSelects = await listSelects(page);
-        const dateOptionText = await findDateOptionText(page, dayIndex);
-        if (!dateOptionText) {
+        const dateResult = await selectQuickBookField(page, 'Choose a date', { optionIndex: dayIndex });
+        attempt.dateSelected = dateResult.set;
+        attempt.dateResult = dateResult.set ? undefined : dateResult;
+        if (!dateResult.set) {
           diagnostics.movieAttempts.push(attempt);
           continue;
         }
+        await page.waitForTimeout(1500);
 
-        attempt.dateSelected = await pick(page, 'date', dateOptionText);
-        await page.waitForTimeout(1200);
-
-        const afterDateSelects = await listSelects(page);
-        const times = findNewTimeOptions(beforeDateSelects, afterDateSelects);
+        const showtimeSelect = page.locator('select').filter({ hasText: 'Choose a showtime' });
+        const showtimeOptions = await showtimeSelect.first().locator('option').allTextContents().catch(() => []);
+        const times = showtimeOptions.slice(1).map((t) => t.trim()).filter(Boolean);
         attempt.timesFound = times.length;
         if (times.length) {
           results.push({ title: movie.title, times, format: '2D' });
-        } else {
-          // Keep this so we can see, next round, whether a showtime-shaped
-          // select existed at all but just had no *new* options.
-          attempt.postDateSelects = afterDateSelects.map((s) => s.options).filter((o) => o.length);
         }
       } catch (err) {
         attempt.error = err.message;
       }
       diagnostics.movieAttempts.push(attempt);
-    }
-
-    if (results.length === 0) {
-      diagnostics.pageTextEnd = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(-500)).catch(() => '');
     }
 
     return { ok: true, results, url: page.url(), diagnostics };
