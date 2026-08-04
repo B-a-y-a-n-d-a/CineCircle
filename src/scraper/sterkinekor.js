@@ -1,36 +1,50 @@
 import { extractShowtimesFromPage } from './extract.js';
-import { chooseCinemaByText } from './siteHelpers.js';
 
-// v2 — confirmed from a live run that the "now showing" page is reached
-// directly at this URL, and the cinema filter is a native <select> whose
-// options are lowercase slugs (e.g. value="sandton", label "Sandton").
-// dayIndex: 0 = today, 1 = tomorrow, 2 = day after.
+// v3 — the generic "pick any <select> containing this text" approach from v2
+// grabbed the wrong dropdown: Ster-Kinekor's homepage has a "Find A Cinema"
+// location-search widget whose options are also plain cinema names, and that
+// one was matched first. Selecting there doesn't touch the "now showing"
+// grid at all (confirmed live: page still showed the location-search sidebar
+// after "selecting" a cinema).
+//
+// Strategy now: try the cinema as a URL query param first (the confirmed
+// option value was the plain lowercase slug, e.g. "sandton" — cheap to try
+// since these Angular apps often read filters from the URL). If that doesn't
+// change the rendered listing, fall back to trying every <select> on the
+// page one at a time and checking whether the listing changed afterwards
+// (rather than assuming the first match is correct).
 export async function scrapeSterKinekorCinema(browser, cinemaSiteName, dayIndex) {
   const page = await browser.newPage();
   try {
-    await page.goto('https://www.sterkinekor.com/actual-content?tab=now-showing', {
+    const slug = cinemaSiteName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    await page.goto(`https://www.sterkinekor.com/actual-content?tab=now-showing&cinema=${slug}`, {
       waitUntil: 'networkidle', timeout: 30000,
     });
+    await page.waitForTimeout(2000);
 
-    const selected = await chooseCinemaByText(page, cinemaSiteName);
-    if (!selected) return { ok: false, error: `Could not find cinema filter for "${cinemaSiteName}"`, url: page.url() };
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(2000); // let client-side rendering finish beyond "networkidle"
+    let results = await extractShowtimesFromPage(page);
+    let usedFallback = false;
 
-    // Try to select the right day. Sites like this usually render a small
-    // strip of date buttons; we just click the Nth one as a best guess.
-    const dateButtons = page.locator('[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i]');
-    const dateButtonsFound = await dateButtons.count().catch(() => 0);
-    if (dateButtonsFound > dayIndex) {
-      await dateButtons.nth(dayIndex).click({ timeout: 5000 }).catch(() => {});
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-      await page.waitForTimeout(1500);
+    if (results.length === 0) {
+      usedFallback = true;
+      const selects = page.locator('select');
+      const selectCount = await selects.count().catch(() => 0);
+      for (let i = 0; i < selectCount && results.length === 0; i++) {
+        const select = selects.nth(i);
+        const options = await select.locator('option').allTextContents().catch(() => []);
+        const matchIndex = options.findIndex((o) => o.trim().toLowerCase().includes(cinemaSiteName.toLowerCase()));
+        if (matchIndex === -1) continue;
+
+        await select.selectOption({ index: matchIndex }).catch(() => {});
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await page.waitForTimeout(2000);
+        results = await extractShowtimesFromPage(page);
+      }
     }
 
-    const results = await extractShowtimesFromPage(page);
-    const diagnostics = { dateButtonsFound };
+    const diagnostics = { usedFallback };
     if (results.length === 0) {
-      diagnostics.pageTextSnippet = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 400)).catch(() => '');
+      diagnostics.pageTextSnippet = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 500)).catch(() => '');
     }
     return { ok: true, results, url: page.url(), diagnostics };
   } catch (err) {

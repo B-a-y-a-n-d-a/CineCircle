@@ -66,10 +66,9 @@ export async function runScrape({ triggeredBy } = {}) {
         }
 
         if (scrape.diagnostics) {
-          console.log(`[scraper]   diagnostics: dateButtonsFound=${scrape.diagnostics.dateButtonsFound}`);
-          if (scrape.diagnostics.pageTextSnippet) {
-            console.log(`[scraper]   page text snippet: ${scrape.diagnostics.pageTextSnippet}`);
-          }
+          const { pageTextSnippet, ...rest } = scrape.diagnostics;
+          console.log(`[scraper]   diagnostics: ${JSON.stringify(rest)}`);
+          if (pageTextSnippet) console.log(`[scraper]   page text snippet: ${pageTextSnippet}`);
         }
         console.log(`[scraper]   found ${scrape.results.length} movie card(s): ${scrape.results.map(r => `${r.title} (${r.times.length} time${r.times.length === 1 ? '' : 's'}: ${r.times.join(', ')})`).join(', ') || 'none'}`);
 
