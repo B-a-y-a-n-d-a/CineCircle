@@ -69,12 +69,24 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
 
       try {
         const detailUrl = new URL(link.href, 'https://www.numetro.co.za/').toString();
-        await page.goto(detailUrl, { waitUntil: 'networkidle', timeout: 30000 });
+        // The movie detail page apparently never goes fully network-idle
+        // (some persistent background request — ads/analytics polling) —
+        // 'networkidle' timed out here every time last run. 'load' is
+        // enough since we explicitly wait afterwards anyway.
+        await page.goto(detailUrl, { waitUntil: 'load', timeout: 30000 });
         await page.waitForTimeout(1500);
 
         attempt.cinemaSelected = await chooseCinemaByText(page, cinemaSiteName);
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
         await page.waitForTimeout(1500);
+
+        // The last run's diagnostics showed the movie info page itself has
+        // no date picker either — just a "Book Now" button. That almost
+        // certainly opens the real booking widget (inline panel or modal).
+        const bookNowButton = page.getByText('Book Now', { exact: false }).first();
+        if (await bookNowButton.count().catch(() => 0)) {
+          await bookNowButton.click({ timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(2000);
+        }
 
         // Try a few likely shapes for a date picker on the detail page.
         const dateButtons = page.locator(
