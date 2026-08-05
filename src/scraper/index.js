@@ -98,16 +98,48 @@ export async function runScrape({ triggeredBy } = {}) {
 
     await browser.close();
 
-    // Replace: wipe out this run's window of scraper-sourced rows, then insert fresh ones.
-    // (Manually-added screenings, source='manual', are never touched.)
-    const windowDates = Array.from({ length: DAYS_AHEAD }, (_, i) => isoDate(dateAt(i)));
-    await supabase.from('screenings').delete().eq('source', 'scraper').in('screening_date', windowDates);
-
+    // Upsert, not delete-then-insert: a group's screening_id needs to keep
+    // pointing at the same row across scrapes, or `groups.screening_id
+    // references screenings(id) on delete cascade` would silently delete
+    // any group built on a showtime the moment it gets rescraped — even
+    // though the showtime itself hasn't changed. Matching on
+    // (movie_id, cinema, screening_date, show_time) — see migration_v5.sql
+    // — means an unchanged showtime keeps its id forever.
     if (newRows.length) {
-      const { error: insertErr } = await supabase.from('screenings').insert(newRows);
-      if (insertErr) throw insertErr;
+      const { error: upsertErr } = await supabase
+        .from('screenings')
+        .upsert(newRows, { onConflict: 'movie_id,cinema,screening_date,show_time' });
+      if (upsertErr) throw upsertErr;
     }
     summary.screeningsFound = newRows.length;
+
+    // Clean up showtimes that are no longer being offered (e.g. a screening
+    // got cancelled) — but only if nobody has built a group on it. A
+    // showtime with an active group stays in the table even after it drops
+    // out of the site's listing, rather than cascade-deleting that group.
+    const windowDates = Array.from({ length: DAYS_AHEAD }, (_, i) => isoDate(dateAt(i)));
+    const newKeys = new Set(newRows.map((r) => `${r.movie_id}|${r.cinema}|${r.screening_date}|${r.show_time}`));
+
+    const { data: existingScraperRows, error: existingErr } = await supabase
+      .from('screenings')
+      .select('id, movie_id, cinema, screening_date, show_time')
+      .eq('source', 'scraper')
+      .in('screening_date', windowDates);
+    if (existingErr) throw existingErr;
+
+    const staleIds = (existingScraperRows || [])
+      .filter((r) => !newKeys.has(`${r.movie_id}|${r.cinema}|${r.screening_date}|${r.show_time}`))
+      .map((r) => r.id);
+
+    if (staleIds.length) {
+      const { data: groupsOnStale } = await supabase
+        .from('groups').select('screening_id').in('screening_id', staleIds);
+      const protectedIds = new Set((groupsOnStale || []).map((g) => g.screening_id));
+      const deletableIds = staleIds.filter((id) => !protectedIds.has(id));
+      if (deletableIds.length) {
+        await supabase.from('screenings').delete().in('id', deletableIds);
+      }
+    }
 
     await supabase.from('scrape_runs').update({
       status: 'success',
