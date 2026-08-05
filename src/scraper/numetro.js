@@ -98,15 +98,20 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
         // picker markup under this heading isn't button/select/[class*=date]
         // shaped at all. Grab the real HTML right around the heading so we
         // can see its actual structure instead of guessing again.
+        //
+        // Last attempt at this picked an ancestor so broad it climbed all
+        // the way to <html> and dumped page <head> scripts instead of the
+        // widget — because "contains this text somewhere" matched huge
+        // containers too. Fix: pick the SMALLEST element that contains the
+        // phrase (closest to the actual heading node), then only step up
+        // one level for surrounding context.
         attempt.confirmSectionHTML = await page.evaluate(() => {
           const all = Array.from(document.querySelectorAll('body *'));
-          const heading = all.find((e) => (e.textContent || '').includes('Confirm your date and time') && e.children.length <= 3);
-          if (!heading) return null;
-          // Walk up a couple of levels to a container that holds the whole
-          // widget (heading + date/time controls), not just the heading text.
-          let container = heading;
-          for (let i = 0; i < 3 && container.parentElement; i++) container = container.parentElement;
-          return container.outerHTML.slice(0, 1500);
+          const candidates = all.filter((e) => (e.textContent || '').includes('Confirm your date and time'));
+          if (!candidates.length) return null;
+          candidates.sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
+          const container = candidates[0].parentElement || candidates[0];
+          return container.outerHTML.slice(0, 2000);
         }).catch(() => null);
 
         // Try a few likely shapes for a date picker within/near that section.
