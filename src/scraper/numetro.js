@@ -24,7 +24,17 @@ function titleTokensSubsetOf(movieTitle, linkText) {
   return true;
 }
 
-const WEEKDAY_HINTS = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const WEEKDAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Confirmed live: the date picker is an Owl Carousel of "Wed5Aug"-style tabs
+// (weekday + day-of-month + month abbreviation, no spaces) — this builds
+// the exact tab text for a given day offset so we can click the right one.
+function dateTabText(dayIndex) {
+  const d = new Date();
+  d.setDate(d.getDate() + dayIndex);
+  return `${WEEKDAY_ABBR[d.getDay()]}${d.getDate()}${MONTH_ABBR[d.getMonth()]}`;
+}
 
 export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, targetMovies = []) {
   const page = await browser.newPage();
@@ -111,58 +121,16 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
           continue;
         }
 
-        // Last round: we successfully got real showtimes (great — cinema
-        // selection is genuinely fixed), but they were identical across
-        // days, meaning we're still just seeing whatever "today" defaults
-        // to. Our button/select-shaped date-picker guesses found nothing
-        // again (dateButtonsFound: 0). Rather than guess another CSS shape,
-        // search the WHOLE page (not just near the confirm heading — the
-        // widget may live in a different column) for any short element
-        // whose own text looks date-like (a weekday name, "Today"/
-        // "Tomorrow", or a day-of-month), and log exactly what it is.
-        const dateLikeElements = await page.evaluate(() => {
-          const weekdayHints = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-          const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-          const all = Array.from(document.querySelectorAll('body *'));
-          const matches = all.filter((e) => {
-            if (e.children.length > 2) return false;
-            const text = norm(e.textContent);
-            if (!text || text.length > 25) return false;
-            return weekdayHints.some((h) => text.includes(h));
-          });
-          return matches.slice(0, 20).map((e) => ({
-            tag: e.tagName,
-            className: (e.className || '').toString().slice(0, 80),
-            text: (e.textContent || '').trim().slice(0, 40),
-            id: e.id || null,
-          }));
-        }).catch(() => []);
-        attempt.dateLikeElements = dateLikeElements;
-
-        // Try a few likely shapes for a date picker within/near that section.
-        const dateButtons = page.locator(
-          '[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i], [class*="tab" i] button'
-        );
-        const dateButtonsFound = await dateButtons.count().catch(() => 0);
-        attempt.dateButtonsFound = dateButtonsFound;
-        if (dateButtonsFound > dayIndex) {
-          await dateButtons.nth(dayIndex).click({ timeout: 5000 }).catch(() => {});
-          await page.waitForTimeout(1500);
-        } else {
-          // No obvious button-based date picker — check for a <select> with
-          // weekday-ish options instead (same pattern Ster-Kinekor used).
-          const selects = page.locator('select');
-          const selectCount = await selects.count().catch(() => 0);
-          for (let i = 0; i < selectCount; i++) {
-            const options = await selects.nth(i).locator('option').allTextContents().catch(() => []);
-            const looksLikeDates = options.some((o) => WEEKDAY_HINTS.some((h) => normalize(o).includes(h)));
-            if (looksLikeDates && options.length > dayIndex) {
-              await selects.nth(i).selectOption({ index: dayIndex }).catch(() => {});
-              attempt.dateSelectUsed = true;
-              await page.waitForTimeout(1500);
-              break;
-            }
-          }
+        // Confirmed live: the date picker is an Owl Carousel of tabs shaped
+        // like "Wed5Aug" (weekday + day-of-month + month, no spaces, no
+        // separators). Click the tab whose text matches the requested day.
+        const wantedTabText = dateTabText(dayIndex);
+        attempt.wantedTabText = wantedTabText;
+        const dateTab = page.locator('.owl-item .item').filter({ hasText: wantedTabText }).first();
+        attempt.dateTabFound = await dateTab.count().catch(() => 0) > 0;
+        if (attempt.dateTabFound) {
+          await dateTab.click({ timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(2000);
         }
 
         const cards = await extractShowtimesFromPage(page);
