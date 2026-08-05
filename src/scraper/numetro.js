@@ -93,6 +93,22 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
           continue;
         }
 
+        // The heading shows up but our generic button/select-based dump
+        // still comes back as just nav links, meaning the actual date/time
+        // picker markup under this heading isn't button/select/[class*=date]
+        // shaped at all. Grab the real HTML right around the heading so we
+        // can see its actual structure instead of guessing again.
+        attempt.confirmSectionHTML = await page.evaluate(() => {
+          const all = Array.from(document.querySelectorAll('body *'));
+          const heading = all.find((e) => (e.textContent || '').includes('Confirm your date and time') && e.children.length <= 3);
+          if (!heading) return null;
+          // Walk up a couple of levels to a container that holds the whole
+          // widget (heading + date/time controls), not just the heading text.
+          let container = heading;
+          for (let i = 0; i < 3 && container.parentElement; i++) container = container.parentElement;
+          return container.outerHTML.slice(0, 1500);
+        }).catch(() => null);
+
         // Try a few likely shapes for a date picker within/near that section.
         const dateButtons = page.locator(
           '[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i], [class*="tab" i] button'
