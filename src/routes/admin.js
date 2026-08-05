@@ -33,6 +33,81 @@ router.get('/scrape/status', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ---- Manual screenings (fallback for when the scraper malfunctions) ----
+
+// GET /api/admin/screenings — every screening, newest first, with its movie.
+router.get('/screenings', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('screenings')
+      .select('*, movie:movies(id, title)')
+      .order('id', { ascending: false });
+    if (error) throw error;
+    res.json(data);
+  } catch (err) { next(err); }
+});
+
+// POST /api/admin/screenings — add a showtime by hand. Tagged
+// source:'manual' so the scraper's own stale-row cleanup (which only
+// touches source:'scraper' rows) never deletes it.
+router.post('/screenings', async (req, res, next) => {
+  try {
+    const { movie_id, cinema, city, show_time, format } = req.body || {};
+    if (!movie_id || !cinema || !city || !show_time) {
+      return res.status(400).json({ error: 'movie_id, cinema, city, and show_time are required' });
+    }
+    const { data, error } = await supabase
+      .from('screenings')
+      .insert({
+        movie_id, cinema, city, show_time,
+        format: format || '2D',
+        source: 'manual',
+      })
+      .select('*, movie:movies(id, title)')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) { next(err); }
+});
+
+// PATCH /api/admin/screenings/:id — edit any field of an existing showtime.
+router.patch('/screenings/:id', async (req, res, next) => {
+  try {
+    const allowed = ['movie_id', 'cinema', 'city', 'show_time', 'format'];
+    const updates = {};
+    for (const key of allowed) if (req.body?.[key] !== undefined) updates[key] = req.body[key];
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'No valid fields to update' });
+
+    const { data, error } = await supabase
+      .from('screenings')
+      .update(updates)
+      .eq('id', req.params.id)
+      .select('*, movie:movies(id, title)')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/admin/screenings/:id — refuses if a group is already built on
+// it (matching the scraper's own stale-row protection), so a bad delete
+// can't silently cascade-wipe a group's members/chat/polls.
+router.delete('/screenings/:id', async (req, res, next) => {
+  try {
+    const { data: dependentGroups, error: groupsErr } = await supabase
+      .from('groups').select('id, name').eq('screening_id', req.params.id);
+    if (groupsErr) throw groupsErr;
+    if (dependentGroups?.length) {
+      return res.status(409).json({
+        error: `Can't delete — ${dependentGroups.length} group(s) are built on this showtime: ${dependentGroups.map(g => g.name).join(', ')}. Edit it instead, or have those groups disband first.`,
+      });
+    }
+    const { error } = await supabase.from('screenings').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 const GROUP_SELECT = `
   id, name, vibe, max_size, spot, topic, status, created_at,
   creator:users!groups_created_by_fkey(id, name, email),

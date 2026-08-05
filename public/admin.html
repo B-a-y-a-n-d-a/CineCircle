@@ -99,8 +99,34 @@
 </div>
 <p class="text-error text-sm hidden mt-3" id="scrape-error"></p>
 </div>
-<div class="glass-card rounded-2xl p-6" id="scrape-status">
+<div class="glass-card rounded-2xl p-6 mb-6" id="scrape-status">
 <p class="text-on-surface-variant">Loading status…</p>
+</div>
+
+<!-- Manual fallback: add/edit/delete a showtime by hand -->
+<div class="glass-card rounded-2xl p-6 mb-6">
+<h2 class="font-title-md text-title-md mb-1">Manual Showtime Entry</h2>
+<p class="text-on-surface-variant text-sm mb-4">Use this if the scraper can't find a venue or a title — it won't get touched by the next scrape.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+<select class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-movie">
+<option value="">Select movie…</option>
+</select>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-cinema" placeholder="Cinema (e.g. Ster-Kinekor Cresta)" type="text"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-city" placeholder="City (e.g. Johannesburg)" type="text"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-format" placeholder="Format (default 2D)" type="text"/>
+<input class="sm:col-span-2 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-showtime" placeholder="Show time (e.g. Fri 8 Aug · 19:30)" type="text"/>
+</div>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="sc-add-btn">Add Showtime</button>
+<p class="text-error text-sm hidden mt-3" id="sc-error"></p>
+<p class="text-secondary text-sm hidden mt-3" id="sc-success"></p>
+</div>
+
+<div class="glass-card rounded-2xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-title-md text-title-md">All Showtimes</h2>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-filter" placeholder="Filter by cinema or movie…" type="text"/>
+</div>
+<div class="space-y-2" id="sc-list"><p class="text-on-surface-variant">Loading…</p></div>
 </div>
 </section>
 
@@ -132,7 +158,11 @@
             document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
             document.querySelector(`[data-tab="${t}"]`).classList.toggle('active', t === tab);
         });
-        if (tab === 'showtimes') loadScrapeStatus();
+        if (tab === 'showtimes') {
+            loadScrapeStatus();
+            loadMoviesIntoSelect();
+            loadScreenings();
+        }
     }
 
     // ---- Group Requests ----
@@ -254,13 +284,27 @@
         if (!run) { el.innerHTML = '<p class="text-on-surface-variant">No scrape has run yet.</p>'; return; }
 
         const when = new Date(run.finished_at || run.started_at).toLocaleString();
+
+        // Per-cinema breakdown, so a failing venue (bad siteName, site
+        // layout change, etc.) is visible right here instead of only in
+        // server console logs.
+        const results = run.results || [];
+        const cinemaRows = results.length
+            ? `<div class="mt-4 space-y-1.5">` + results.map(r => {
+                const icon = r.ok ? '<span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>' : '<span class="material-symbols-outlined text-error text-[18px]">error</span>';
+                const errDetail = (!r.ok && r.errors?.length)
+                    ? `<div class="text-error text-xs mt-0.5 ml-6">${r.errors.map(CineCircle.escapeHtml).join('<br/>')}</div>` : '';
+                return `<div class="text-sm"><div class="flex items-center gap-2">${icon}<span class="${r.ok ? 'text-on-surface' : 'text-error'}">${CineCircle.escapeHtml(r.displayName)}</span><span class="text-on-surface-variant text-xs">— ${r.screeningsFound} showtime${r.screeningsFound === 1 ? '' : 's'}</span></div>${errDetail}</div>`;
+            }).join('') + `</div>`
+            : '';
+
         if (run.status === 'error') {
-            el.innerHTML = `<p class="text-error">Last run failed (${CineCircle.escapeHtml(when)}): ${CineCircle.escapeHtml(run.error || 'unknown error')}</p>`;
+            el.innerHTML = `<p class="text-error">Last run failed (${CineCircle.escapeHtml(when)}): ${CineCircle.escapeHtml(run.error || 'unknown error')}</p>${cinemaRows}`;
         } else {
             const unmatched = (run.unmatched_movies || []).length
                 ? `<p class="text-on-surface-variant text-sm mt-2">Seen on-site but not in our Movies list (add them, then re-run): ${run.unmatched_movies.map(CineCircle.escapeHtml).join(', ')}</p>`
                 : '';
-            el.innerHTML = `<p class="text-secondary">Last run: ${CineCircle.escapeHtml(when)} — found <b>${run.screenings_found}</b> screenings.</p>${unmatched}`;
+            el.innerHTML = `<p class="text-secondary">Last run: ${CineCircle.escapeHtml(when)} — found <b>${run.screenings_found}</b> screenings.</p>${unmatched}${cinemaRows}`;
         }
     }
 
@@ -279,6 +323,114 @@
         try {
             await adminApi('/scrape/run', { method: 'POST' });
             await loadScrapeStatus();
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    // ---- Manual Showtime Entry (fallback for when the scraper malfunctions) ----
+    let allScreenings = [];
+    let editingScreeningId = null;
+
+    async function loadMoviesIntoSelect() {
+        const movies = await CineCircle.api('/movies');
+        const sel = document.getElementById('sc-movie');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Select movie…</option>' +
+            movies.map(m => `<option value="${m.id}">${CineCircle.escapeHtml(m.title)}</option>`).join('');
+        sel.value = current;
+    }
+
+    function screeningRow(s) {
+        return `<div class="glass-card rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" data-screening-id="${s.id}">
+            <div>
+                <div class="text-secondary text-[11px] font-bold uppercase tracking-wider mb-0.5">${CineCircle.escapeHtml(s.movie?.title || '(no movie)')} ${s.source === 'manual' ? '<span class="text-on-surface-variant normal-case font-normal">· manual entry</span>' : ''}</div>
+                <div class="font-body-md text-sm">${CineCircle.escapeHtml(s.cinema)} · ${CineCircle.escapeHtml(s.city)} · ${CineCircle.escapeHtml(s.format || '2D')}</div>
+                <div class="text-on-surface-variant text-sm">${CineCircle.escapeHtml(s.show_time)}</div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+                <button class="px-3 py-1.5 rounded-lg border border-white/10 text-sm" onclick="editScreening('${s.id}')">Edit</button>
+                <button class="px-3 py-1.5 rounded-lg border border-error/40 text-error text-sm" onclick="deleteScreening('${s.id}')">Delete</button>
+            </div>
+        </div>`;
+    }
+
+    function renderScreeningsList() {
+        const filter = document.getElementById('sc-filter').value.trim().toLowerCase();
+        const filtered = !filter ? allScreenings : allScreenings.filter(s =>
+            (s.cinema || '').toLowerCase().includes(filter) || (s.movie?.title || '').toLowerCase().includes(filter));
+        document.getElementById('sc-list').innerHTML = filtered.length
+            ? filtered.map(screeningRow).join('')
+            : '<p class="text-on-surface-variant">No showtimes match.</p>';
+    }
+
+    async function loadScreenings() {
+        allScreenings = await adminApi('/screenings');
+        renderScreeningsList();
+    }
+
+    document.getElementById('sc-filter').addEventListener('input', renderScreeningsList);
+
+    function resetScreeningForm() {
+        editingScreeningId = null;
+        document.getElementById('sc-movie').value = '';
+        document.getElementById('sc-cinema').value = '';
+        document.getElementById('sc-city').value = '';
+        document.getElementById('sc-format').value = '';
+        document.getElementById('sc-showtime').value = '';
+        document.getElementById('sc-add-btn').textContent = 'Add Showtime';
+    }
+
+    window.editScreening = function (id) {
+        const s = allScreenings.find(x => x.id === id);
+        if (!s) return;
+        editingScreeningId = id;
+        document.getElementById('sc-movie').value = s.movie_id || '';
+        document.getElementById('sc-cinema').value = s.cinema || '';
+        document.getElementById('sc-city').value = s.city || '';
+        document.getElementById('sc-format').value = s.format || '';
+        document.getElementById('sc-showtime').value = s.show_time || '';
+        document.getElementById('sc-add-btn').textContent = 'Save Changes';
+        document.getElementById('sc-movie').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    window.deleteScreening = async function (id) {
+        if (!confirm('Delete this showtime?')) return;
+        try {
+            await adminApi(`/screenings/${id}`, { method: 'DELETE' });
+            await loadScreenings();
+        } catch (err) { alert(err.message); }
+    };
+
+    document.getElementById('sc-add-btn').addEventListener('click', async () => {
+        const errorEl = document.getElementById('sc-error');
+        const successEl = document.getElementById('sc-success');
+        errorEl.classList.add('hidden'); successEl.classList.add('hidden');
+
+        const body = {
+            movie_id: document.getElementById('sc-movie').value,
+            cinema: document.getElementById('sc-cinema').value.trim(),
+            city: document.getElementById('sc-city').value.trim(),
+            show_time: document.getElementById('sc-showtime').value.trim(),
+            format: document.getElementById('sc-format').value.trim() || '2D',
+        };
+        if (!body.movie_id || !body.cinema || !body.city || !body.show_time) {
+            errorEl.textContent = 'Movie, cinema, city, and show time are all required.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        try {
+            if (editingScreeningId) {
+                await adminApi(`/screenings/${editingScreeningId}`, { method: 'PATCH', body });
+                successEl.textContent = 'Showtime updated!';
+            } else {
+                await adminApi('/screenings', { method: 'POST', body });
+                successEl.textContent = 'Showtime added!';
+            }
+            successEl.classList.remove('hidden');
+            resetScreeningForm();
+            await loadScreenings();
         } catch (err) {
             errorEl.textContent = err.message;
             errorEl.classList.remove('hidden');

@@ -43,6 +43,11 @@ export async function runScrape({ triggeredBy } = {}) {
   if (runErr) throw runErr;
 
   const summary = { screeningsFound: 0, unmatchedMovies: new Set() };
+  // Per-cinema breakdown so a failure (e.g. a wrong siteName that no longer
+  // matches the site's own <select> options) shows up in the admin UI
+  // instead of only in server console logs. One entry per cinema, covering
+  // all DAYS_AHEAD attempts for it.
+  const cinemaResults = [];
 
   try {
     const { data: movies, error: moviesErr } = await supabase.from('movies').select('*');
@@ -52,6 +57,15 @@ export async function runScrape({ triggeredBy } = {}) {
     const newRows = [];
 
     for (const cinema of TARGET_CINEMAS) {
+      const result = {
+        displayName: cinema.displayName,
+        chain: cinema.chain,
+        city: cinema.city,
+        ok: true,
+        screeningsFound: 0,
+        errors: [],
+      };
+
       for (let dayIndex = 0; dayIndex < DAYS_AHEAD; dayIndex++) {
         const date = dateAt(dayIndex);
         console.log(`[scraper] ${cinema.displayName} — ${isoDate(date)}`);
@@ -62,6 +76,7 @@ export async function runScrape({ triggeredBy } = {}) {
 
         if (!scrape.ok) {
           console.warn(`[scraper] FAILED ${cinema.displayName} (${scrape.url}): ${scrape.error}`);
+          result.errors.push(`${isoDate(date)}: ${scrape.error}`);
           continue;
         }
 
@@ -72,6 +87,10 @@ export async function runScrape({ triggeredBy } = {}) {
           if (pageTextEnd) console.log(`[scraper]   page text END: ${pageTextEnd}`);
         }
         console.log(`[scraper]   found ${scrape.results.length} movie card(s): ${scrape.results.map(r => `${r.title} (${r.times.length} time${r.times.length === 1 ? '' : 's'}: ${r.times.join(', ')})`).join(', ') || 'none'}`);
+
+        if (!scrape.results.length) {
+          result.errors.push(`${isoDate(date)}: no movie cards found (cinema/venue may not have matched on-site — check siteName in config.js)`);
+        }
 
         for (const item of scrape.results) {
           const movie = matchMovie(item.title, movies);
@@ -91,9 +110,13 @@ export async function runScrape({ triggeredBy } = {}) {
               screening_date: isoDate(date),
               scraped_at: new Date().toISOString(),
             });
+            result.screeningsFound += 1;
           }
         }
       }
+
+      result.ok = result.errors.length === 0;
+      cinemaResults.push(result);
     }
 
     await browser.close();
@@ -146,6 +169,7 @@ export async function runScrape({ triggeredBy } = {}) {
       finished_at: new Date().toISOString(),
       screenings_found: summary.screeningsFound,
       unmatched_movies: [...summary.unmatchedMovies],
+      results: cinemaResults,
     }).eq('id', run.id);
 
     return { ...summary, unmatchedMovies: [...summary.unmatchedMovies] };
@@ -154,6 +178,7 @@ export async function runScrape({ triggeredBy } = {}) {
       status: 'error',
       finished_at: new Date().toISOString(),
       error: err.message,
+      results: cinemaResults,
     }).eq('id', run.id);
     throw err;
   }
