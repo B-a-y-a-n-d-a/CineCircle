@@ -69,22 +69,40 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
         await page.goto(detailUrl, { waitUntil: 'load', timeout: 30000 });
         await page.waitForTimeout(1500);
 
-        attempt.cinemaSelected = await chooseCinemaByText(page, cinemaSiteName);
-        await page.waitForTimeout(1000);
-
-        // Confirmed live: selecting the cinema reveals a "Confirm your date
-        // and time for <movie>" section — that's where the real dates and
-        // showtimes are. Poll for that text to actually show up rather than
-        // a blind sleep, since we don't know exactly how long it takes.
-        const confirmHeading = page.getByText('Confirm your date and time', { exact: false }).first();
-        let confirmAppeared = false;
-        for (let i = 0; i < 15 && !confirmAppeared; i++) {
-          confirmAppeared = (await confirmHeading.count().catch(() => 0)) > 0;
-          if (!confirmAppeared) await page.waitForTimeout(500);
+        // Confirmed live (from the "Confirm your date and time for Nu
+        // Metro" dump last round — "Nu Metro" is the generic placeholder,
+        // meaning no real cinema was ever actually confirmed): this page's
+        // cinema picker is its own widget with a "Choose your cinema"
+        // prompt that opens a searchable table (#CinemaTable, rows filled
+        // into tbody#output), not plain clickable text. chooseCinemaByText
+        // was matching something else on the page entirely. Drive the real
+        // widget explicitly.
+        const chooseCinemaPrompt = page.getByText('Choose your cinema', { exact: false }).first();
+        if (await chooseCinemaPrompt.count().catch(() => 0)) {
+          await chooseCinemaPrompt.click({ timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(1000);
         }
-        attempt.confirmSectionAppeared = confirmAppeared;
 
-        if (!confirmAppeared) {
+        // Wait for the cinema table to actually have real rows (it starts
+        // empty and fills in via JS/AJAX).
+        let cinemaRow = null;
+        for (let i = 0; i < 10 && !cinemaRow; i++) {
+          const row = page.locator('#output tr, #CinemaTable tbody tr').filter({ hasText: cinemaSiteName }).first();
+          if (await row.count().catch(() => 0)) cinemaRow = row;
+          else await page.waitForTimeout(500);
+        }
+        attempt.cinemaRowFound = !!cinemaRow;
+        if (cinemaRow) {
+          await cinemaRow.click({ timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(1500);
+        }
+
+        // Confirm the cinema actually took — location_title should now
+        // read our cinema name instead of the generic "Nu Metro" default.
+        attempt.locationTitleAfter = await page.locator('#location_title').first().textContent().catch(() => null);
+        attempt.cinemaSelected = !!attempt.locationTitleAfter && normalize(attempt.locationTitleAfter).includes(normalize(cinemaSiteName));
+
+        if (!attempt.cinemaSelected) {
           attempt.clickableTexts = await page.evaluate(() => {
             const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
             return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 60);
@@ -93,25 +111,17 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
           continue;
         }
 
-        // The heading shows up but our generic button/select-based dump
-        // still comes back as just nav links, meaning the actual date/time
-        // picker markup under this heading isn't button/select/[class*=date]
-        // shaped at all. Grab the real HTML right around the heading so we
-        // can see its actual structure instead of guessing again.
-        //
-        // Last attempt at this picked an ancestor so broad it climbed all
-        // the way to <html> and dumped page <head> scripts instead of the
-        // widget — because "contains this text somewhere" matched huge
-        // containers too. Fix: pick the SMALLEST element that contains the
-        // phrase (closest to the actual heading node), then only step up
-        // one level for surrounding context.
+        // Now that the cinema is genuinely confirmed, grab the HTML right
+        // around the "Confirm your date and time" section again — this
+        // time it should actually contain the date/time widget instead of
+        // an empty cinema table.
         attempt.confirmSectionHTML = await page.evaluate(() => {
           const all = Array.from(document.querySelectorAll('body *'));
           const candidates = all.filter((e) => (e.textContent || '').includes('Confirm your date and time'));
           if (!candidates.length) return null;
           candidates.sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
           const container = candidates[0].parentElement || candidates[0];
-          return container.outerHTML.slice(0, 2000);
+          return container.outerHTML.slice(0, 3000);
         }).catch(() => null);
 
         // Try a few likely shapes for a date picker within/near that section.
