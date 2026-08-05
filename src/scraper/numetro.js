@@ -80,22 +80,41 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
         attempt.cinemaSelected = await chooseCinemaByText(page, cinemaSiteName);
         await page.waitForTimeout(1500);
 
+        // "Choose a cinema" and "Choose an experience" sit next to each
+        // other — "Book Now" likely stays inert/disabled until *both* are
+        // set, not just the cinema. Pick the first real option in whichever
+        // select has that "Choose an experience" placeholder before trying
+        // the button.
+        const experienceSelect = page.locator('select').filter({ hasText: 'Choose an experience' }).first();
+        if (await experienceSelect.count().catch(() => 0)) {
+          const options = await experienceSelect.locator('option').allTextContents().catch(() => []);
+          if (options.length > 1) await experienceSelect.selectOption({ index: 1 }).catch(() => {});
+          await page.waitForTimeout(800);
+        }
+
         // Last run: the diagnostics dump was byte-for-byte identical before
-        // and after clicking "Book Now" — the click did nothing to *this*
-        // page. That's the fingerprint of a link that opens a new tab
-        // (target="_blank") to a separate booking system, rather than
-        // updating the current page. Watch for that popup explicitly.
+        // and after clicking "Book Now", with no popup and no navigation —
+        // the click genuinely did nothing. Try again now that "experience"
+        // is set too, watching for either a new tab OR a same-page
+        // navigation (could be either depending on how the link works),
+        // and use a forced click in case something is silently intercepting
+        // the plain click.
         const bookNowButton = page.getByText('Book Now', { exact: false }).first();
         if (await bookNowButton.count().catch(() => 0)) {
+          await bookNowButton.scrollIntoViewIfNeeded().catch(() => {});
           const popupPromise = page.context().waitForEvent('page', { timeout: 8000 }).catch(() => null);
-          await bookNowButton.click({ timeout: 5000 }).catch(() => {});
-          const popup = await popupPromise;
+          const navPromise = page.waitForNavigation({ timeout: 8000 }).catch(() => null);
+          await bookNowButton.click({ timeout: 5000, force: true }).catch(() => {});
+          const [popup] = await Promise.all([popupPromise, navPromise]);
           if (popup) {
             bookingPage = popup;
             await bookingPage.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
           }
           await bookingPage.waitForTimeout(2000);
         }
+        attempt.experienceOptionCount = await experienceSelect.count().catch(() => 0)
+          ? (await experienceSelect.locator('option').allTextContents().catch(() => [])).length
+          : 0;
         attempt.usedPopup = bookingPage !== page;
         attempt.bookingUrl = bookingPage.url();
 
