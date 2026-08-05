@@ -111,12 +111,27 @@
 <select class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-movie">
 <option value="">Select movie…</option>
 </select>
-<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-cinema" placeholder="Cinema (e.g. Ster-Kinekor Cresta)" type="text"/>
-<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-city" placeholder="City (e.g. Johannesburg)" type="text"/>
+<div>
+<select class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-cinema-select">
+<option value="">Select cinema…</option>
+<option value="__new__">+ Add a new cinema…</option>
+</select>
+<input class="hidden mt-2 w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-cinema-new" placeholder="New cinema name (e.g. Ster-Kinekor Cresta)" type="text"/>
+</div>
+<div>
+<select class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-city-select">
+<option value="">Select city…</option>
+<option value="__new__">+ Add a new city…</option>
+</select>
+<input class="hidden mt-2 w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-city-new" placeholder="New city name (e.g. Johannesburg)" type="text"/>
+</div>
 <input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-format" placeholder="Format (default 2D)" type="text"/>
 <input class="sm:col-span-2 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-showtime" placeholder="Show time (e.g. Fri 8 Aug · 19:30)" type="text"/>
 </div>
+<div class="flex items-center gap-3">
 <button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="sc-add-btn">Add Showtime</button>
+<button class="hidden px-6 py-3 rounded-lg border border-white/10 text-on-surface-variant font-bold hover:bg-white/5 transition-all" id="sc-cancel-edit-btn" type="button">Cancel edit</button>
+</div>
 <p class="text-error text-sm hidden mt-3" id="sc-error"></p>
 <p class="text-secondary text-sm hidden mt-3" id="sc-success"></p>
 </div>
@@ -126,6 +141,8 @@
 <h2 class="font-title-md text-title-md">All Showtimes</h2>
 <input class="bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-filter" placeholder="Filter by cinema or movie…" type="text"/>
 </div>
+<p class="text-error text-sm hidden mb-3" id="sc-list-error"></p>
+<p class="text-secondary text-sm hidden mb-3" id="sc-list-success"></p>
 <div class="space-y-2" id="sc-list"><p class="text-on-surface-variant">Loading…</p></div>
 </div>
 </section>
@@ -331,7 +348,8 @@
 
     // ---- Manual Showtime Entry (fallback for when the scraper malfunctions) ----
     let allScreenings = [];
-    let editingScreeningId = null;
+    let editingScreeningId = null; // string form of the id being edited, or null
+    let confirmingDeleteId = null; // string form of the id awaiting delete confirmation
 
     async function loadMoviesIntoSelect() {
         const movies = await CineCircle.api('/movies');
@@ -342,17 +360,77 @@
         sel.value = current;
     }
 
+    // Cinema/venue and city dropdowns are populated from whatever's already
+    // in the database — no free-typing a cinema name with a typo that then
+    // silently creates a brand new, disconnected venue. "+ Add a new
+    // cinema/city…" is the deliberate escape hatch for a genuinely new one.
+    function populateCinemaCityOptions() {
+        const cinemas = [...new Set(allScreenings.map(s => s.cinema).filter(Boolean))].sort();
+        const cities = [...new Set(allScreenings.map(s => s.city).filter(Boolean))].sort();
+
+        const cinemaSel = document.getElementById('sc-cinema-select');
+        const prevCinema = cinemaSel.value;
+        cinemaSel.innerHTML = '<option value="">Select cinema…</option>' +
+            cinemas.map(c => `<option value="${CineCircle.escapeHtml(c)}">${CineCircle.escapeHtml(c)}</option>`).join('') +
+            '<option value="__new__">+ Add a new cinema…</option>';
+        cinemaSel.value = cinemas.includes(prevCinema) ? prevCinema : (prevCinema === '__new__' ? '__new__' : '');
+
+        const citySel = document.getElementById('sc-city-select');
+        const prevCity = citySel.value;
+        citySel.innerHTML = '<option value="">Select city…</option>' +
+            cities.map(c => `<option value="${CineCircle.escapeHtml(c)}">${CineCircle.escapeHtml(c)}</option>`).join('') +
+            '<option value="__new__">+ Add a new city…</option>';
+        citySel.value = cities.includes(prevCity) ? prevCity : (prevCity === '__new__' ? '__new__' : '');
+
+        document.getElementById('sc-cinema-new').classList.toggle('hidden', cinemaSel.value !== '__new__');
+        document.getElementById('sc-city-new').classList.toggle('hidden', citySel.value !== '__new__');
+    }
+
+    document.getElementById('sc-cinema-select').addEventListener('change', () => {
+        document.getElementById('sc-cinema-new').classList.toggle('hidden', document.getElementById('sc-cinema-select').value !== '__new__');
+    });
+    document.getElementById('sc-city-select').addEventListener('change', () => {
+        document.getElementById('sc-city-new').classList.toggle('hidden', document.getElementById('sc-city-select').value !== '__new__');
+    });
+
+    function setSelectOrNew(selectId, newInputId, value) {
+        const sel = document.getElementById(selectId);
+        const options = [...sel.options].map(o => o.value);
+        if (value && options.includes(value)) {
+            sel.value = value;
+            document.getElementById(newInputId).classList.add('hidden');
+            document.getElementById(newInputId).value = '';
+        } else {
+            sel.value = '__new__';
+            document.getElementById(newInputId).classList.remove('hidden');
+            document.getElementById(newInputId).value = value || '';
+        }
+    }
+
+    function resolveSelectValue(selectId, newInputId) {
+        const sel = document.getElementById(selectId).value;
+        return sel === '__new__' ? document.getElementById(newInputId).value.trim() : sel;
+    }
+
     function screeningRow(s) {
+        const isConfirming = confirmingDeleteId === String(s.id);
+        const actions = isConfirming
+            ? `<div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-error text-sm font-bold">Delete this showtime?</span>
+                <button class="px-3 py-1.5 rounded-lg bg-error text-on-error text-sm font-bold" onclick="confirmDeleteScreening('${s.id}')">Yes, delete</button>
+                <button class="px-3 py-1.5 rounded-lg border border-white/10 text-sm" onclick="cancelDeleteScreening()">Cancel</button>
+               </div>`
+            : `<div class="flex gap-2 flex-shrink-0">
+                <button class="px-3 py-1.5 rounded-lg border border-white/10 text-sm" onclick="editScreening('${s.id}')">Edit</button>
+                <button class="px-3 py-1.5 rounded-lg border border-error/40 text-error text-sm" onclick="deleteScreening('${s.id}')">Delete</button>
+               </div>`;
         return `<div class="glass-card rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" data-screening-id="${s.id}">
             <div>
                 <div class="text-secondary text-[11px] font-bold uppercase tracking-wider mb-0.5">${CineCircle.escapeHtml(s.movie?.title || '(no movie)')} ${s.source === 'manual' ? '<span class="text-on-surface-variant normal-case font-normal">· manual entry</span>' : ''}</div>
                 <div class="font-body-md text-sm">${CineCircle.escapeHtml(s.cinema)} · ${CineCircle.escapeHtml(s.city)} · ${CineCircle.escapeHtml(s.format || '2D')}</div>
                 <div class="text-on-surface-variant text-sm">${CineCircle.escapeHtml(s.show_time)}</div>
             </div>
-            <div class="flex gap-2 flex-shrink-0">
-                <button class="px-3 py-1.5 rounded-lg border border-white/10 text-sm" onclick="editScreening('${s.id}')">Edit</button>
-                <button class="px-3 py-1.5 rounded-lg border border-error/40 text-error text-sm" onclick="deleteScreening('${s.id}')">Delete</button>
-            </div>
+            ${actions}
         </div>`;
     }
 
@@ -367,6 +445,7 @@
 
     async function loadScreenings() {
         allScreenings = await adminApi('/screenings');
+        populateCinemaCityOptions();
         renderScreeningsList();
     }
 
@@ -375,32 +454,68 @@
     function resetScreeningForm() {
         editingScreeningId = null;
         document.getElementById('sc-movie').value = '';
-        document.getElementById('sc-cinema').value = '';
-        document.getElementById('sc-city').value = '';
+        document.getElementById('sc-cinema-select').value = '';
+        document.getElementById('sc-cinema-new').value = '';
+        document.getElementById('sc-cinema-new').classList.add('hidden');
+        document.getElementById('sc-city-select').value = '';
+        document.getElementById('sc-city-new').value = '';
+        document.getElementById('sc-city-new').classList.add('hidden');
         document.getElementById('sc-format').value = '';
         document.getElementById('sc-showtime').value = '';
         document.getElementById('sc-add-btn').textContent = 'Add Showtime';
+        document.getElementById('sc-cancel-edit-btn').classList.add('hidden');
     }
 
+    document.getElementById('sc-cancel-edit-btn').addEventListener('click', resetScreeningForm);
+
+    // Screening ids are Postgres serial ints; `id` arrives here as a string
+    // (from the onclick attribute), so compare as strings — this is the fix
+    // for Edit previously silently doing nothing (`x.id === id` was
+    // comparing a number to a string and never matching).
     window.editScreening = function (id) {
-        const s = allScreenings.find(x => x.id === id);
+        const s = allScreenings.find(x => String(x.id) === String(id));
         if (!s) return;
-        editingScreeningId = id;
+        editingScreeningId = String(id);
         document.getElementById('sc-movie').value = s.movie_id || '';
-        document.getElementById('sc-cinema').value = s.cinema || '';
-        document.getElementById('sc-city').value = s.city || '';
+        setSelectOrNew('sc-cinema-select', 'sc-cinema-new', s.cinema || '');
+        setSelectOrNew('sc-city-select', 'sc-city-new', s.city || '');
         document.getElementById('sc-format').value = s.format || '';
         document.getElementById('sc-showtime').value = s.show_time || '';
         document.getElementById('sc-add-btn').textContent = 'Save Changes';
+        document.getElementById('sc-cancel-edit-btn').classList.remove('hidden');
         document.getElementById('sc-movie').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    window.deleteScreening = async function (id) {
-        if (!confirm('Delete this showtime?')) return;
+    // Delete now confirms in-place (row turns into "Delete this showtime? /
+    // Yes, delete / Cancel") instead of the browser's native confirm() popup.
+    window.deleteScreening = function (id) {
+        confirmingDeleteId = String(id);
+        renderScreeningsList();
+    };
+
+    window.cancelDeleteScreening = function () {
+        confirmingDeleteId = null;
+        renderScreeningsList();
+    };
+
+    window.confirmDeleteScreening = async function (id) {
+        const listErrorEl = document.getElementById('sc-list-error');
+        const listSuccessEl = document.getElementById('sc-list-success');
+        listErrorEl.classList.add('hidden'); listSuccessEl.classList.add('hidden');
+        const row = document.querySelector(`[data-screening-id="${id}"]`);
+        if (row) row.style.opacity = '0.5';
         try {
             await adminApi(`/screenings/${id}`, { method: 'DELETE' });
+            confirmingDeleteId = null;
             await loadScreenings();
-        } catch (err) { alert(err.message); }
+            listSuccessEl.textContent = 'Showtime deleted.';
+            listSuccessEl.classList.remove('hidden');
+        } catch (err) {
+            confirmingDeleteId = null;
+            renderScreeningsList();
+            listErrorEl.textContent = err.message;
+            listErrorEl.classList.remove('hidden');
+        }
     };
 
     document.getElementById('sc-add-btn').addEventListener('click', async () => {
@@ -410,8 +525,8 @@
 
         const body = {
             movie_id: document.getElementById('sc-movie').value,
-            cinema: document.getElementById('sc-cinema').value.trim(),
-            city: document.getElementById('sc-city').value.trim(),
+            cinema: resolveSelectValue('sc-cinema-select', 'sc-cinema-new'),
+            city: resolveSelectValue('sc-city-select', 'sc-city-new'),
             show_time: document.getElementById('sc-showtime').value.trim(),
             format: document.getElementById('sc-format').value.trim() || '2D',
         };

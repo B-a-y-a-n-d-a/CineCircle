@@ -37,6 +37,16 @@ export const TARGET_CINEMAS = [
   { chain: 'numetro',     siteName: 'Hyde Park',   displayName: 'Nu Metro Hyde Park',        city: 'Johannesburg' },
   { chain: 'numetro',     siteName: 'Clearwater',  displayName: 'Nu Metro Clearwater',       city: 'Roodepoort' },
   { chain: 'numetro',     siteName: 'Emperors Palace', displayName: 'Nu Metro Emperors Palace', city: 'Kempton Park' },
+  // The rest of Nu Metro's Gauteng footprint — confirmed against
+  // numetro.co.za/cinemas' own cinema list. That page lists cinemas
+  // nationwide without a province tag, so these four were identified by
+  // known location (Bedford = Bedford Centre, Bedfordview; The Glen =
+  // Oakdene, Johannesburg; Woodlands = Woodlands Boulevard, Pretoria);
+  // "Westgate (Roodepoort)" was explicit on the page itself.
+  { chain: 'numetro',     siteName: 'Bedford',    displayName: 'Nu Metro Bedford',   city: 'Bedfordview' },
+  { chain: 'numetro',     siteName: 'The Glen',   displayName: 'Nu Metro The Glen',  city: 'Johannesburg' },
+  { chain: 'numetro',     siteName: 'Woodlands',  displayName: 'Nu Metro Woodlands', city: 'Pretoria' },
+  { chain: 'numetro',     siteName: 'Westgate',   displayName: 'Nu Metro Westgate',  city: 'Roodepoort' },
 ];
 
 // How many days ahead to scrape, per the request: today, tomorrow, day after.
@@ -45,5 +55,5 @@ export const DAYS_AHEAD = 3;
 // Gauteng city names used to trim old, out-of-scope seed data (see migration_v4.sql).
 export const GAUTENG_CITIES = [
   'Johannesburg', 'Pretoria', 'Roodepoort', 'Kempton Park', 'Centurion', 'Midrand',
-  'Brakpan', 'Krugersdorp', 'Germiston', 'Vanderbijlpark',
+  'Brakpan', 'Krugersdorp', 'Germiston', 'Vanderbijlpark', 'Bedfordview',
 ];
