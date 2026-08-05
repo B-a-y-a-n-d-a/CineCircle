@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Group | CineCircle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(22, 27, 48, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background-color: #0b0e1a;
+            background-image: radial-gradient(circle at 50% -20%, #1c1f2c 0%, #0b0e1a 100%);
+            min-height: 100vh;
+        }
+        .pattern-bg::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.62 0H60v5.38L54.62 0zM4.62 0H0v4.62L4.62 0zm50.76 60H60v-5.38L55.38 60zm-50.76 0H0v-4.62L4.62 60zM30 34.62L34.62 30 30 25.38 25.38 30 30 34.62zm0-9.24L34.62 20 30 15.38 25.38 20 30 25.38zm0 18.48L34.62 40 30 35.38 25.38 40 30 44.62zM44.62 30L50 24.62 44.62 19.24 39.24 24.62 44.62 30zm-29.24 0L20 24.62 14.62 19.24 9.24 24.62 14.62 30zM30 4.62L34.62 0h-9.24L30 4.62zM30 55.38L25.38 60h9.24L30 55.38zM60 30l-4.62-4.62V34.62L60 30zM0 30l4.62 4.62V25.38L0 30z' fill='%23ffffff' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+            z-index: -1;
+            pointer-events: none;
+        }
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+        #polls-drawer { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10131f",
+                        "surface-container-high": "#272936",
+                        "surface-variant": "#313442",
+                        "tertiary": "#c6c6c7",
+                        "surface-container": "#1c1f2c",
+                        "tertiary-container": "#909191",
+                        "on-secondary-fixed": "#00164d",
+                        "on-primary": "#680008",
+                        "on-primary-container": "#5c0006",
+                        "surface-bright": "#363946",
+                        "secondary": "#b5c4ff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-background": "#e0e1f3",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e1f3",
+                        "secondary-fixed": "#dce1ff",
+                        "outline-variant": "#5b403d",
+                        "inverse-primary": "#bb161f",
+                        "primary": "#ffb3ad",
+                        "on-secondary-fixed-variant": "#234193",
+                        "on-error": "#690005",
+                        "primary-fixed": "#ffdad6",
+                        "secondary-container": "#234193",
+                        "on-tertiary": "#2f3131",
+                        "primary-fixed-dim": "#ffb3ad",
+                        "surface-container-low": "#181b27",
+                        "surface-dim": "#10131f",
+                        "surface-container-lowest": "#0b0e1a",
+                        "surface-tint": "#ffb3ad",
+                        "on-tertiary-container": "#282a2a",
+                        "on-surface-variant": "#e4bdba",
+                        "primary-container": "#ff544e",
+                        "on-primary-fixed": "#410003",
+                        "inverse-surface": "#e0e1f3",
+                        "on-secondary": "#00297b",
+                        "surface-container-highest": "#313442",
+                        "background": "#10131f",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-primary-fixed-variant": "#930010",
+                        "secondary-fixed-dim": "#b5c4ff",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "inverse-on-surface": "#2d303d",
+                        "outline": "#ab8885",
+                        "on-secondary-container": "#9cb2ff"
+                    },
+                    "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    "spacing": { "card-gap": "20px", "container-margin": "24px", "gutter": "16px", "section-padding": "40px", "base": "8px" },
+                    "fontFamily": {
+                        "label-sm": ["Inter"], "display-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"], "body-md": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="pattern-bg overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 z-40 w-full bg-surface/60 backdrop-blur-md border-b border-white/10 shadow-[0_0_20px_rgba(226,54,54,0.1)]">
+<div class="max-w-7xl mx-auto px-container-margin py-4 flex justify-between items-center">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-display-lg font-extrabold text-primary tracking-tighter cursor-pointer" onclick="window.location.href='watch_groups.html'">CineCircle</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="watch_groups.html">Watch Groups</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="my_plans.html">My Plans</a>
+<a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors font-body-md text-body-md" href="discussion_board.html">Discussion Board</a>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container/30 hover:border-primary-container transition-colors bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+</div>
+</nav>
+
+<main class="pt-28 pb-16 px-container-margin max-w-7xl mx-auto min-h-screen" id="page-content">
+<!-- Back link -->
+<a class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm mb-4 transition-colors" href="my_plans.html">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span> BACK TO MY PLANS
+</a>
+
+<div id="not-found-state" class="hidden text-center py-24">
+<span class="material-symbols-outlined text-primary text-5xl mb-4 block">error</span>
+<h2 class="font-headline-lg text-headline-lg mb-2">Group not found</h2>
+<p class="text-on-surface-variant mb-6">It may have been removed, or you're not a member of it.</p>
+<a class="bg-primary-container text-on-primary px-6 py-3 rounded-full font-bold inline-flex items-center gap-2" href="my_plans.html"><span class="material-symbols-outlined">arrow_back</span> Back to My Plans</a>
+</div>
+
+<div id="group-view" class="hidden">
+<!-- Group Header -->
+<div class="glass-card rounded-2xl p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<div class="text-secondary text-[11px] font-bold uppercase tracking-wider mb-1" id="group-movie-title"></div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface" id="group-name"></h1>
+</div>
+<div class="flex items-center gap-3 flex-wrap">
+<button class="bg-surface-container-high hover:bg-surface-variant transition-colors px-5 py-3 rounded-xl font-bold flex items-center gap-2 text-on-surface" id="open-polls-btn" type="button">
+<span class="material-symbols-outlined">poll</span> Polls
+</button>
+<button class="border-1.5 border-outline hover:bg-error-container/20 hover:border-error transition-all px-5 py-3 rounded-xl font-bold flex items-center gap-2 text-on-surface" id="leave-group-btn" type="button">
+<span class="material-symbols-outlined">logout</span> Leave Group
+</button>
+</div>
+</div>
+
+<!-- Main two-column layout: chat (primary) + pinned info sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-card-gap items-start">
+
+<!-- Chat column -->
+<div class="glass-card rounded-2xl flex flex-col h-[70vh] overflow-hidden">
+<div class="px-5 py-4 border-b border-white/5 flex items-center gap-2 flex-shrink-0">
+<span class="material-symbols-outlined text-primary">forum</span>
+<h2 class="font-title-md text-title-md">Group Chat</h2>
+</div>
+<div class="flex-1 overflow-y-auto chat-scroll px-5 py-4 space-y-3" id="chat-feed"></div>
+<div class="p-4 border-t border-white/5 flex-shrink-0">
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-full px-4 py-2.5 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="chat-input" placeholder="Say something to the group…" type="text"/>
+<button class="w-11 h-11 flex-shrink-0 rounded-full bg-primary-container text-white flex items-center justify-center hover:brightness-110 transition-all" id="chat-send" title="Send">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+
+<!-- Sidebar: pinned info -->
+<div class="flex flex-col gap-card-gap">
+<div class="glass-card rounded-2xl p-5">
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-3">Screening</p>
+<div class="flex items-center gap-2 text-on-surface mb-2"><span class="material-symbols-outlined text-primary text-[18px]">theater_comedy</span><span id="info-cinema" class="font-body-md text-body-md"></span></div>
+<div class="flex items-center gap-2 text-on-surface mb-2"><span class="material-symbols-outlined text-primary text-[18px]">schedule</span><span id="info-time" class="font-body-md text-body-md"></span></div>
+<div class="flex items-center gap-2 text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">mood</span><span id="info-vibe" class="font-body-md text-body-md"></span></div>
+</div>
+<div class="glass-card rounded-2xl p-5">
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-2">Post-Movie Hangout</p>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">coffee</span>
+<div>
+<p class="font-body-md text-body-md text-on-surface" id="info-spot"></p>
+<p class="text-on-surface-variant text-sm italic mt-1" id="info-topic"></p>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-5">
+<div class="flex items-center justify-between mb-3">
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-wider">Members</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="info-member-count"></span>
+</div>
+<div class="flex flex-wrap gap-2" id="info-members"></div>
+</div>
+</div>
+
+</div>
+</div>
+</main>
+
+<!-- Polls drawer: on-demand overlay, not a persistent tab -->
+<div class="hidden fixed inset-0 z-50" id="polls-overlay">
+<div class="absolute inset-0 bg-surface-container-lowest/70 backdrop-blur-sm" onclick="closePolls()"></div>
+<div class="absolute top-0 right-0 h-full w-full max-w-md glass-card rounded-l-2xl flex flex-col" id="polls-drawer" style="transform: translateX(100%);">
+<div class="flex items-center justify-between p-5 border-b border-white/5 flex-shrink-0">
+<h2 class="font-title-md text-title-md flex items-center gap-2"><span class="material-symbols-outlined text-primary">poll</span> Polls</h2>
+<button class="p-2 hover:bg-white/5 rounded-full transition-colors" onclick="closePolls()"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto p-5">
+<div id="polls-list" class="space-y-4 mb-6"></div>
+<div class="bg-surface-container-high/50 rounded-xl p-4">
+<p class="font-label-sm text-label-sm mb-3">Start a new poll</p>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2.5 mb-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="poll-question" placeholder="e.g. Where should we go after?" type="text"/>
+<div id="poll-options-inputs" class="space-y-2 mb-2">
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input" placeholder="Option 1" type="text"/>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input" placeholder="Option 2" type="text"/>
+</div>
+<div class="flex gap-2 items-center">
+<button class="text-secondary text-sm font-bold" id="poll-add-option" type="button">+ Add option</button>
+<span class="flex-1"></span>
+<button class="px-5 py-2 rounded-lg bg-primary-container text-white font-bold text-sm" id="poll-create-btn" type="button">Create Poll</button>
+</div>
+<p class="text-error text-sm hidden mt-2" id="poll-error"></p>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+        let user;
+        let group;
+        let refreshTimer = null;
+
+        function groupIdFromUrl() {
+            return new URLSearchParams(window.location.search).get('id');
+        }
+
+        async function leaveGroup() {
+            if (!confirm('Leave this group?')) return;
+            try {
+                await CineCircle.api(`/groups/${group.id}/leave`, { method: 'POST', body: { user_id: user.id } });
+                window.location.href = 'my_plans.html';
+            } catch (err) { alert(err.message); }
+        }
+        document.getElementById('leave-group-btn').addEventListener('click', leaveGroup);
+
+        function renderGroupInfo() {
+            document.getElementById('group-movie-title').textContent = group.screening?.movie?.title || '';
+            document.getElementById('group-name').textContent = group.name;
+            document.getElementById('info-cinema').textContent = `${group.screening?.cinema || ''}${group.screening?.format ? ' · ' + group.screening.format : ''}`;
+            document.getElementById('info-time').textContent = group.screening?.show_time || '';
+            document.getElementById('info-vibe').textContent = group.vibe;
+            document.getElementById('info-spot').textContent = group.spot;
+            document.getElementById('info-topic').textContent = `"${group.topic}"`;
+            document.getElementById('info-member-count').textContent = `${group.members.length} / ${group.max_size}`;
+            document.getElementById('info-members').innerHTML = group.members.map(m =>
+                `<span class="bg-surface-container-high px-3 py-1 rounded-full text-sm">${CineCircle.escapeHtml(m.name)}</span>`
+            ).join('');
+        }
+
+        // ---- Chat ----
+        async function loadChat() {
+            try {
+                const messages = await CineCircle.api(`/groups/${group.id}/messages`);
+                const feed = document.getElementById('chat-feed');
+                const wasAtBottom = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
+                feed.innerHTML = messages.length
+                    ? messages.map(m => `<div class="flex gap-2 items-baseline">
+                        <span class="font-bold text-sm text-primary flex-shrink-0">${CineCircle.escapeHtml(m.author?.name || '?')}</span>
+                        <span class="text-sm text-on-surface break-words">${CineCircle.escapeHtml(m.text)}</span>
+                      </div>`).join('')
+                    : '<p class="text-on-surface-variant text-sm text-center py-8">No messages yet — say hello! 👋</p>';
+                if (wasAtBottom) feed.scrollTop = feed.scrollHeight;
+            } catch (err) { /* silent on background poll */ }
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            try {
+                await CineCircle.api(`/groups/${group.id}/messages`, { method: 'POST', body: { user_id: user.id, text } });
+                await loadChat();
+                const feed = document.getElementById('chat-feed');
+                feed.scrollTop = feed.scrollHeight;
+            } catch (err) { alert(err.message); }
+        }
+        document.getElementById('chat-send').addEventListener('click', sendChat);
+        document.getElementById('chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendChat();
+        });
+
+        // ---- Polls (on-demand drawer, not a persistent tab) ----
+        function openPolls() {
+            document.getElementById('polls-overlay').classList.remove('hidden');
+            requestAnimationFrame(() => { document.getElementById('polls-drawer').style.transform = 'translateX(0)'; });
+            loadPolls();
+        }
+        function closePolls() {
+            document.getElementById('polls-drawer').style.transform = 'translateX(100%)';
+            setTimeout(() => document.getElementById('polls-overlay').classList.add('hidden'), 300);
+        }
+        document.getElementById('open-polls-btn').addEventListener('click', openPolls);
+
+        function pollCard(p) {
+            const options = p.options.map(o => {
+                const pct = p.totalVotes ? Math.round((o.votes / p.totalVotes) * 100) : 0;
+                return `<button class="w-full text-left mb-2 relative" onclick="votePoll('${p.id}','${o.id}')">
+                    <div class="flex justify-between text-sm mb-1"><span>${CineCircle.escapeHtml(o.label)}</span><span class="text-on-surface-variant">${o.votes} vote${o.votes === 1 ? '' : 's'}</span></div>
+                    <div class="h-2 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
+                </button>`;
+            }).join('');
+            return `<div class="bg-surface-container-high/50 rounded-xl p-4">
+                <p class="font-title-md text-sm mb-3">${CineCircle.escapeHtml(p.question)}</p>
+                ${options}
+            </div>`;
+        }
+
+        async function loadPolls() {
+            try {
+                const polls = await CineCircle.api(`/groups/${group.id}/polls`);
+                document.getElementById('polls-list').innerHTML = polls.length
+                    ? polls.map(pollCard).join('')
+                    : '<p class="text-on-surface-variant text-sm">No polls yet — start one below.</p>';
+            } catch (err) { /* silent */ }
+        }
+
+        async function votePoll(pollId, optionId) {
+            try {
+                await CineCircle.api(`/groups/polls/${pollId}/vote`, { method: 'POST', body: { user_id: user.id, option_id: optionId } });
+                await loadPolls();
+            } catch (err) { alert(err.message); }
+        }
+
+        document.getElementById('poll-add-option').addEventListener('click', () => {
+            const container = document.getElementById('poll-options-inputs');
+            const count = container.querySelectorAll('.poll-option-input').length + 1;
+            const input = document.createElement('input');
+            input.className = 'w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary-container outline-none poll-option-input';
+            input.placeholder = `Option ${count}`;
+            input.type = 'text';
+            container.appendChild(input);
+        });
+
+        document.getElementById('poll-create-btn').addEventListener('click', async () => {
+            const errorEl = document.getElementById('poll-error');
+            errorEl.classList.add('hidden');
+            const question = document.getElementById('poll-question').value.trim();
+            const options = [...document.querySelectorAll('.poll-option-input')].map(i => i.value.trim()).filter(Boolean);
+            if (!question || options.length < 2) {
+                errorEl.textContent = 'Add a question and at least 2 options.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            try {
+                await CineCircle.api(`/groups/${group.id}/polls`, { method: 'POST', body: { user_id: user.id, question, options } });
+                document.getElementById('poll-question').value = '';
+                document.querySelectorAll('.poll-option-input').forEach(i => i.value = '');
+                await loadPolls();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        (async () => {
+            const session = await CineCircle.requireSession();
+            if (!session) return;
+            user = CineCircle.requireUser();
+            if (!user) return;
+            CineCircle.wireUserChip();
+
+            const id = groupIdFromUrl();
+            try {
+                const myGroups = await CineCircle.api(`/groups/mine?user_id=${encodeURIComponent(user.id)}`);
+                group = myGroups.find(g => g.id === id);
+            } catch (err) { group = null; }
+
+            if (!group) {
+                document.getElementById('not-found-state').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('group-view').classList.remove('hidden');
+            renderGroupInfo();
+            await loadChat();
+            document.getElementById('chat-feed').scrollTop = document.getElementById('chat-feed').scrollHeight;
+
+            refreshTimer = setInterval(() => {
+                loadChat();
+                if (!document.getElementById('polls-overlay').classList.contains('hidden')) loadPolls();
+            }, 6000);
+        })();
+    </script>
+</body></html>
