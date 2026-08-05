@@ -219,28 +219,6 @@
 </select>
 </div>
 </div>
-<div class="flex flex-col gap-1 min-w-[160px] flex-1">
-<label class="font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant pl-1" for="city-filter">City</label>
-<div class="flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors">
-<span class="material-symbols-outlined text-primary text-[20px]">location_on</span>
-<select class="bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer" id="city-filter">
-<option value="">All cities</option>
-</select>
-</div>
-</div>
-<div class="flex flex-col gap-1 min-w-[160px] flex-1">
-<label class="font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant pl-1" for="vibe-filter">Vibe</label>
-<div class="flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors">
-<span class="material-symbols-outlined text-primary text-[20px]">mood</span>
-<select class="bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer" id="vibe-filter">
-<option value="">All Vibes</option>
-<option value="Hardcore fans">Hardcore fans</option>
-<option value="Casual">Casual</option>
-<option value="First-timers welcome">First-timers welcome</option>
-<option value="Quiet watchers">Quiet watchers</option>
-</select>
-</div>
-</div>
 </div>
 </div>
 <!-- Groups Grid -->
@@ -397,16 +375,12 @@ No groups match your filters — try clearing them, or start your own.
             const movieId = document.getElementById('movie-filter').value;
             const chain = document.getElementById('chain-filter').value;
             const venue = document.getElementById('venue-filter').value;
-            const city = document.getElementById('city-filter').value;
-            const vibe = document.getElementById('vibe-filter').value;
             const search = document.getElementById('search-input').value.trim().toLowerCase();
 
             let filtered = allGroups.filter(g => {
                 if (movieId && String(g.screening?.movie?.id) !== movieId) return false;
                 if (chain && chainOf(g.screening?.cinema) !== chain) return false;
                 if (venue && g.screening?.cinema !== venue) return false;
-                if (city && g.screening?.city !== city) return false;
-                if (vibe && g.vibe !== vibe) return false;
                 if (search && !g.name.toLowerCase().includes(search)) return false;
                 return true;
             });
@@ -421,7 +395,7 @@ No groups match your filters — try clearing them, or start your own.
                 grid.innerHTML = filtered.map(groupCard).join('');
             }
             document.getElementById('results-count').textContent = filtered.length;
-            updateClearFiltersVisibility([movieId, chain, venue, city, vibe, search].filter(Boolean).length);
+            updateClearFiltersVisibility([movieId, chain, venue, search].filter(Boolean).length);
             wireCardHover();
         }
 
@@ -487,13 +461,6 @@ No groups match your filters — try clearing them, or start your own.
             allScreenings = screenings;
             allGroups = groups;
 
-            const citySelect = document.getElementById('city-filter');
-            const currentCity = citySelect.value;
-            const cities = [...new Set(screenings.map(s => s.city))];
-            citySelect.innerHTML = '<option value="">All cities</option>' +
-                cities.map(c => `<option value="${CineCircle.escapeHtml(c)}">${CineCircle.escapeHtml(c)}</option>`).join('');
-            citySelect.value = currentCity;
-
             const chainSelect = document.getElementById('chain-filter');
             const currentChain = chainSelect.value;
             const chains = CHAINS.filter(c => screenings.some(s => chainOf(s.cinema) === c));
@@ -508,11 +475,9 @@ No groups match your filters — try clearing them, or start your own.
         document.getElementById('movie-filter').addEventListener('change', render);
         document.getElementById('chain-filter').addEventListener('change', () => { refreshVenueOptions(); render(); });
         document.getElementById('venue-filter').addEventListener('change', render);
-        document.getElementById('city-filter').addEventListener('change', render);
-        document.getElementById('vibe-filter').addEventListener('change', render);
         document.getElementById('search-input').addEventListener('input', render);
         document.getElementById('clear-filters-btn').addEventListener('click', () => {
-            ['movie-filter', 'chain-filter', 'venue-filter', 'city-filter', 'vibe-filter'].forEach(id => {
+            ['movie-filter', 'chain-filter', 'venue-filter'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             document.getElementById('search-input').value = '';
