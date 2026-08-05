@@ -82,13 +82,18 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
 
         // "Choose a cinema" and "Choose an experience" sit next to each
         // other — "Book Now" likely stays inert/disabled until *both* are
-        // set, not just the cinema. Pick the first real option in whichever
-        // select has that "Choose an experience" placeholder before trying
-        // the button.
-        const experienceSelect = page.locator('select').filter({ hasText: 'Choose an experience' }).first();
-        if (await experienceSelect.count().catch(() => 0)) {
-          const options = await experienceSelect.locator('option').allTextContents().catch(() => []);
-          if (options.length > 1) await experienceSelect.selectOption({ index: 1 }).catch(() => {});
+        // set, not just the cinema. Playwright's `.filter({ hasText })`
+        // against a bare <select> turned out unreliable last round
+        // (experienceOptionCount always came back 0 even though the option
+        // text clearly exists in the page dump) — read every select's own
+        // option list directly instead, the same reliable approach used for
+        // Ster-Kinekor's placeholder-anchored selects.
+        const allSelectsInfo = await page.evaluate(() => Array.from(document.querySelectorAll('select')).map((s) => Array.from(s.options).map((o) => (o.textContent || '').trim()))).catch(() => []);
+        const experienceIndex = allSelectsInfo.findIndex((opts) => opts[0] === 'Choose an experience');
+        attempt.experienceOptionCount = experienceIndex !== -1 ? allSelectsInfo[experienceIndex].length : 0;
+        attempt.allSelectsBeforeBookNow = allSelectsInfo;
+        if (experienceIndex !== -1 && allSelectsInfo[experienceIndex].length > 1) {
+          await page.locator('select').nth(experienceIndex).selectOption({ index: 1 }).catch(() => {});
           await page.waitForTimeout(800);
         }
 
@@ -112,9 +117,6 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
           }
           await bookingPage.waitForTimeout(2000);
         }
-        attempt.experienceOptionCount = await experienceSelect.count().catch(() => 0)
-          ? (await experienceSelect.locator('option').allTextContents().catch(() => [])).length
-          : 0;
         attempt.usedPopup = bookingPage !== page;
         attempt.bookingUrl = bookingPage.url();
 
