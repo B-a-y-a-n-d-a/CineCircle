@@ -111,18 +111,33 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
           continue;
         }
 
-        // Now that the cinema is genuinely confirmed, grab the HTML right
-        // around the "Confirm your date and time" section again — this
-        // time it should actually contain the date/time widget instead of
-        // an empty cinema table.
-        attempt.confirmSectionHTML = await page.evaluate(() => {
+        // Last round: we successfully got real showtimes (great — cinema
+        // selection is genuinely fixed), but they were identical across
+        // days, meaning we're still just seeing whatever "today" defaults
+        // to. Our button/select-shaped date-picker guesses found nothing
+        // again (dateButtonsFound: 0). Rather than guess another CSS shape,
+        // search the WHOLE page (not just near the confirm heading — the
+        // widget may live in a different column) for any short element
+        // whose own text looks date-like (a weekday name, "Today"/
+        // "Tomorrow", or a day-of-month), and log exactly what it is.
+        const dateLikeElements = await page.evaluate(() => {
+          const weekdayHints = ['today', 'tomorrow', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+          const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           const all = Array.from(document.querySelectorAll('body *'));
-          const candidates = all.filter((e) => (e.textContent || '').includes('Confirm your date and time'));
-          if (!candidates.length) return null;
-          candidates.sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
-          const container = candidates[0].parentElement || candidates[0];
-          return container.outerHTML.slice(0, 3000);
-        }).catch(() => null);
+          const matches = all.filter((e) => {
+            if (e.children.length > 2) return false;
+            const text = norm(e.textContent);
+            if (!text || text.length > 25) return false;
+            return weekdayHints.some((h) => text.includes(h));
+          });
+          return matches.slice(0, 20).map((e) => ({
+            tag: e.tagName,
+            className: (e.className || '').toString().slice(0, 80),
+            text: (e.textContent || '').trim().slice(0, 40),
+            id: e.id || null,
+          }));
+        }).catch(() => []);
+        attempt.dateLikeElements = dateLikeElements;
 
         // Try a few likely shapes for a date picker within/near that section.
         const dateButtons = page.locator(
