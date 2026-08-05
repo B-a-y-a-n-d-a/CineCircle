@@ -67,6 +67,7 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
         continue;
       }
 
+      let bookingPage = page;
       try {
         const detailUrl = new URL(link.href, 'https://www.numetro.co.za/').toString();
         // The movie detail page apparently never goes fully network-idle
@@ -79,29 +80,45 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
         attempt.cinemaSelected = await chooseCinemaByText(page, cinemaSiteName);
         await page.waitForTimeout(1500);
 
-        // The last run's diagnostics showed the movie info page itself has
-        // no date picker either — just a "Book Now" button. That almost
-        // certainly opens the real booking widget (inline panel or modal).
+        // Last run: the diagnostics dump was byte-for-byte identical before
+        // and after clicking "Book Now" — the click did nothing to *this*
+        // page. That's the fingerprint of a link that opens a new tab
+        // (target="_blank") to a separate booking system, rather than
+        // updating the current page. Watch for that popup explicitly.
         const bookNowButton = page.getByText('Book Now', { exact: false }).first();
         if (await bookNowButton.count().catch(() => 0)) {
+          const popupPromise = page.context().waitForEvent('page', { timeout: 8000 }).catch(() => null);
           await bookNowButton.click({ timeout: 5000 }).catch(() => {});
-          await page.waitForTimeout(2000);
+          const popup = await popupPromise;
+          if (popup) {
+            bookingPage = popup;
+            await bookingPage.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
+          }
+          await bookingPage.waitForTimeout(2000);
         }
+        attempt.usedPopup = bookingPage !== page;
+        attempt.bookingUrl = bookingPage.url();
 
-        // Try a few likely shapes for a date picker on the detail page.
-        const dateButtons = page.locator(
+        // The booking flow (own site or separate ticketing system) may need
+        // its own cinema selection — try it there too, harmlessly no-ops if
+        // there's nothing to select.
+        await chooseCinemaByText(bookingPage, cinemaSiteName).catch(() => false);
+        await bookingPage.waitForTimeout(1000);
+
+        // Try a few likely shapes for a date picker.
+        const dateButtons = bookingPage.locator(
           '[class*="date" i] button, [class*="date" i] [role="button"], button[class*="day" i], [class*="tab" i] button'
         );
         const dateButtonsFound = await dateButtons.count().catch(() => 0);
         attempt.dateButtonsFound = dateButtonsFound;
         if (dateButtonsFound > dayIndex) {
           await dateButtons.nth(dayIndex).click({ timeout: 5000 }).catch(() => {});
-          await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-          await page.waitForTimeout(1500);
+          await bookingPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+          await bookingPage.waitForTimeout(1500);
         } else {
           // No obvious button-based date picker — check for a <select> with
           // weekday-ish options instead (same pattern Ster-Kinekor used).
-          const selects = page.locator('select');
+          const selects = bookingPage.locator('select');
           const selectCount = await selects.count().catch(() => 0);
           for (let i = 0; i < selectCount; i++) {
             const options = await selects.nth(i).locator('option').allTextContents().catch(() => []);
@@ -109,26 +126,28 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
             if (looksLikeDates && options.length > dayIndex) {
               await selects.nth(i).selectOption({ index: dayIndex }).catch(() => {});
               attempt.dateSelectUsed = true;
-              await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-              await page.waitForTimeout(1500);
+              await bookingPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+              await bookingPage.waitForTimeout(1500);
               break;
             }
           }
         }
 
-        const cards = await extractShowtimesFromPage(page);
+        const cards = await extractShowtimesFromPage(bookingPage);
         const times = cards.length ? cards[0].times : [];
         attempt.timesFound = times.length;
         if (times.length) {
           results.push({ title: movie.title, times, format: cards[0].format || '2D' });
         } else {
-          attempt.clickableTexts = await page.evaluate(() => {
+          attempt.clickableTexts = await bookingPage.evaluate(() => {
             const els = Array.from(document.querySelectorAll('button, [role="button"], a, [class*="date" i], [class*="day" i], [class*="tab" i], select option'));
             return [...new Set(els.map((el) => (el.textContent || '').trim()).filter((t) => t && t.length < 40))].slice(0, 60);
           }).catch(() => []);
         }
       } catch (err) {
         attempt.error = err.message;
+      } finally {
+        if (bookingPage !== page) await bookingPage.close().catch(() => {});
       }
       diagnostics.movieAttempts.push(attempt);
     }
