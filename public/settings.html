@@ -57,7 +57,17 @@
 <a class="text-on-surface-variant font-medium hover:text-on-surface transition-colors" href="discussion_board.html">Reel Talk</a>
 </nav>
 </div>
+<div class="flex items-center gap-2">
 <button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary hover:scale-105 transition-transform duration-200 bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+<button class="md:hidden p-2 -mr-2 text-on-surface" id="mobile-menu-btn" type="button" aria-label="Menu">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+<div class="hidden md:hidden border-t border-white/10 px-container-margin py-2" id="mobile-menu">
+<a class="block py-2.5 text-on-surface-variant font-medium" href="watch_groups.html">Home</a>
+<a class="block py-2.5 text-on-surface-variant font-medium" href="my_plans.html">My Watch Party</a>
+<a class="block py-2.5 text-on-surface-variant font-medium" href="discussion_board.html">Reel Talk</a>
 </div>
 </header>
 
@@ -148,6 +158,10 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
     function showMsg(id, text, isError) {
         const el = document.getElementById(id);
         el.textContent = text;

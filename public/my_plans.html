@@ -150,7 +150,15 @@
 <input class="bg-surface-container-low border border-white/10 rounded-full py-2 pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary-container transition-all w-64 font-body-md text-body-md" placeholder="Search films..." type="text"/>
 </div>
 <button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container/30 hover:border-primary-container transition-colors bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></button>
+<button class="md:hidden p-2 -mr-2 text-on-surface" id="mobile-menu-btn" type="button" aria-label="Menu">
+<span class="material-symbols-outlined">menu</span>
+</button>
 </div>
+</div>
+<div class="hidden md:hidden border-t border-white/10 px-container-margin py-2" id="mobile-menu">
+<a class="block py-2.5 text-on-surface-variant font-medium font-body-md text-body-md" href="watch_groups.html">Home</a>
+<a class="block py-2.5 text-primary font-bold font-body-md text-body-md" href="my_plans.html">My Watch Party</a>
+<a class="block py-2.5 text-on-surface-variant font-medium font-body-md text-body-md" href="discussion_board.html">Reel Talk</a>
 </div>
 </nav>
 <main class="pt-32 pb-section-padding px-container-margin max-w-7xl mx-auto min-h-[calc(100vh-200px)]">
@@ -223,6 +231,10 @@ Your group request has been submitted — it'll appear here once an admin approv
 <script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
         let user;
         let myGroups = [];
 

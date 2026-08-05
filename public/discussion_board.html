@@ -144,7 +144,15 @@
 <input class="bg-surface-container-low border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary-container transition-all w-64" placeholder="Search discussions..." type="text"/>
 </div>
 <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container/20 bg-surface-container-high text-primary cursor-pointer" data-user-avatar=""></div>
+<button class="md:hidden p-2 -mr-2 text-on-surface" id="mobile-menu-btn" type="button" aria-label="Menu">
+<span class="material-symbols-outlined">menu</span>
+</button>
 </div>
+</div>
+<div class="hidden md:hidden border-t border-white/10 px-container-margin py-2" id="mobile-menu">
+<a class="block py-2.5 text-on-surface-variant font-medium font-body-md text-body-md" href="watch_groups.html">Home</a>
+<a class="block py-2.5 text-on-surface-variant font-medium font-body-md text-body-md" href="my_plans.html">My Watch Party</a>
+<a class="block py-2.5 text-primary font-bold font-body-md text-body-md" href="discussion_board.html">Reel Talk</a>
 </div>
 </header>
 <main class="flex-grow max-w-4xl mx-auto w-full px-container-margin py-section-padding">
@@ -208,6 +216,10 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
         let user;
 
         function revealSpoiler(container) {
