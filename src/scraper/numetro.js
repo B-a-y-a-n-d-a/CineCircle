@@ -82,20 +82,26 @@ export async function scrapeNuMetroCinema(browser, cinemaSiteName, dayIndex, tar
 
         // "Choose a cinema" and "Choose an experience" sit next to each
         // other — "Book Now" likely stays inert/disabled until *both* are
-        // set, not just the cinema. Playwright's `.filter({ hasText })`
-        // against a bare <select> turned out unreliable last round
-        // (experienceOptionCount always came back 0 even though the option
-        // text clearly exists in the page dump) — read every select's own
-        // option list directly instead, the same reliable approach used for
-        // Ster-Kinekor's placeholder-anchored selects.
-        const allSelectsInfo = await page.evaluate(() => Array.from(document.querySelectorAll('select')).map((s) => Array.from(s.options).map((o) => (o.textContent || '').trim()))).catch(() => []);
-        const experienceIndex = allSelectsInfo.findIndex((opts) => opts[0] === 'Choose an experience');
-        attempt.experienceOptionCount = experienceIndex !== -1 ? allSelectsInfo[experienceIndex].length : 0;
-        attempt.allSelectsBeforeBookNow = allSelectsInfo;
-        if (experienceIndex !== -1 && allSelectsInfo[experienceIndex].length > 1) {
-          await page.locator('select').nth(experienceIndex).selectOption({ index: 1 }).catch(() => {});
-          await page.waitForTimeout(800);
-        }
+        // set, not just the cinema. Last round: allSelectsBeforeBookNow came
+        // back completely empty ([]) — there are literally zero <select>
+        // elements anywhere on this page (top-level document), even though
+        // the option-looking text is clearly visible. That means either (a)
+        // this is a custom JS dropdown, not a native <select>, or (b) the
+        // widget lives inside an <iframe>, whose DOM isn't reachable via
+        // document.querySelectorAll on the top-level page at all. Check
+        // both possibilities directly instead of guessing further.
+        attempt.frameUrls = page.frames().map((f) => f.url());
+        attempt.chooseElementInfo = await page.evaluate(() => {
+          const all = Array.from(document.querySelectorAll('body *'));
+          const el = all.find((e) => e.children.length === 0 && (e.textContent || '').trim() === 'Choose a cinema');
+          if (!el) return null;
+          return {
+            tag: el.tagName,
+            className: el.className,
+            outerHTML: el.outerHTML.slice(0, 300),
+            parentOuterHTML: el.parentElement ? el.parentElement.outerHTML.slice(0, 500) : null,
+          };
+        }).catch(() => null);
 
         // Last run: the diagnostics dump was byte-for-byte identical before
         // and after clicking "Book Now", with no popup and no navigation —
