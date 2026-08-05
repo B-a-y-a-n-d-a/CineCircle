@@ -1,0 +1,55 @@
+# Cloud Build pipeline: build the Dockerfile, push to Artifact Registry,
+# deploy to Cloud Run. Wired to fire automatically on every push to `main`
+# via a Cloud Build trigger (see GCP_DEPLOYMENT.md for the one-time setup).
+#
+# --min-instances=1 AND --max-instances=1 are both deliberate, not just a
+# cost choice: Cloud Run scales to zero by default, which would kill the
+# in-process nightly scraper cron (server.js) the moment traffic goes idle.
+# Pinning to exactly one instance keeps the cron alive continuously *and*
+# guarantees it only ever fires once (not once per instance), since this is
+# a low-traffic MVP that doesn't need to scale out anyway.
+
+substitutions:
+  _REGION: africa-south1
+  _REPO: cinecircle-repo
+  _SERVICE: cinecircle
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+      - .
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--min-instances=1'
+      - '--max-instances=1'
+      - '--memory=2Gi'
+      - '--cpu=1'
+      - '--timeout=600'
+      - '--set-secrets=SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

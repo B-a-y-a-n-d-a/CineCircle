@@ -1,3 +1,8 @@
+> **Superseded** — moved to GCP Cloud Run once the Railway trial ended.
+> See `GCP_DEPLOYMENT.md` for the current setup. Keeping this file for
+> reference in case you ever go back to Railway (`railway.toml` in the repo
+> root is likewise unused now but harmless to leave in place).
+
 # Deploying CineCircle (Railway, push-to-deploy on `main`)
 
 This app is a single Node/Express service (`server.js`) that also serves
