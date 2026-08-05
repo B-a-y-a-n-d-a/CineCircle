@@ -14,6 +14,25 @@ export const TARGET_CINEMAS = [
   { chain: 'sterkinekor', siteName: 'Mall of Africa', displayName: 'Ster-Kinekor Mall of Africa', city: 'Midrand' },
   { chain: 'sterkinekor', siteName: 'Zone @ Roseban',  displayName: 'Ster-Kinekor The Zone @ Rosebank', city: 'Johannesburg' },
   { chain: 'sterkinekor', siteName: 'Southgate',       displayName: 'Ster-Kinekor Southgate',      city: 'Johannesburg' },
+  // The rest of Ster-Kinekor's Gauteng footprint — confirmed by fetching
+  // sterkinekor.com/locator directly (its own "Find a cinema" list, grouped
+  // by province) rather than guessed or scraped from a third-party site.
+  // A couple of these ("Brooklyn Commercia…") were truncated by the
+  // locator's own UI, same as "Zone @ Roseban" above, so siteName only
+  // covers the guaranteed, untruncated portion. "The Grove" also appears
+  // as "The Grove Windhoek" under Namibia on the same page — if the
+  // matcher ever grabs the wrong one, tighten this substring once a scrape
+  // run's console log shows which option text it actually saw.
+  { chain: 'sterkinekor', siteName: 'Brooklyn',    displayName: 'Ster-Kinekor Brooklyn Mall',  city: 'Pretoria' },
+  { chain: 'sterkinekor', siteName: 'Carnival City', displayName: 'Ster-Kinekor Carnival City', city: 'Brakpan' },
+  { chain: 'sterkinekor', siteName: 'Cedar Square', displayName: 'Ster-Kinekor Cedar Square',  city: 'Johannesburg' },
+  { chain: 'sterkinekor', siteName: 'Cradlestone', displayName: 'Ster-Kinekor Cradlestone',    city: 'Krugersdorp' },
+  { chain: 'sterkinekor', siteName: 'Eastgate',    displayName: 'Ster-Kinekor Eastgate',       city: 'Germiston' },
+  { chain: 'sterkinekor', siteName: 'Irene',       displayName: 'Ster-Kinekor Irene',          city: 'Centurion' },
+  { chain: 'sterkinekor', siteName: 'Rosebank Nouveau', displayName: 'Ster-Kinekor Rosebank Nouveau', city: 'Johannesburg' },
+  { chain: 'sterkinekor', siteName: 'The Grove',   displayName: 'Ster-Kinekor The Grove',      city: 'Pretoria' },
+  { chain: 'sterkinekor', siteName: 'Vaal',        displayName: 'Ster-Kinekor Vaal',           city: 'Vanderbijlpark' },
+  { chain: 'sterkinekor', siteName: 'Wonderpark',  displayName: 'Ster-Kinekor Wonderpark',     city: 'Pretoria' },
   { chain: 'numetro',     siteName: 'Menlyn Park', displayName: 'Nu Metro Menlyn Park',      city: 'Pretoria' },
   { chain: 'numetro',     siteName: 'Hyde Park',   displayName: 'Nu Metro Hyde Park',        city: 'Johannesburg' },
   { chain: 'numetro',     siteName: 'Clearwater',  displayName: 'Nu Metro Clearwater',       city: 'Roodepoort' },
@@ -24,4 +43,7 @@ export const TARGET_CINEMAS = [
 export const DAYS_AHEAD = 3;
 
 // Gauteng city names used to trim old, out-of-scope seed data (see migration_v4.sql).
-export const GAUTENG_CITIES = ['Johannesburg', 'Pretoria', 'Roodepoort', 'Kempton Park', 'Centurion', 'Midrand'];
+export const GAUTENG_CITIES = [
+  'Johannesburg', 'Pretoria', 'Roodepoort', 'Kempton Park', 'Centurion', 'Midrand',
+  'Brakpan', 'Krugersdorp', 'Germiston', 'Vanderbijlpark',
+];
