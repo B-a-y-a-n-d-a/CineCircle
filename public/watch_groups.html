@@ -153,7 +153,7 @@
 </header>
 <main class="mt-[72px] flex-grow">
 <!-- Hero Banner -->
-<section class="relative w-full h-[60vh] min-h-[500px] flex items-end overflow-hidden" id="movie-hero">
+<section class="relative w-full h-[85vh] min-h-[600px] flex items-end overflow-hidden" id="movie-hero">
 <div id="hero-slides" class="absolute inset-0 z-0"><!-- slides injected by JS --></div>
 <div class="absolute inset-0 spider-web-overlay opacity-30 z-[1]"></div>
 <div class="absolute inset-0 movie-gradient z-[1]"></div>
@@ -202,29 +202,32 @@
 <div class="flex flex-wrap gap-3" id="filter-controls">
 <div class="flex flex-col gap-1 min-w-[160px] flex-1">
 <label class="font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant pl-1" for="movie-filter">Movie</label>
-<div class="flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors">
+<div class="filter-box relative flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors" data-filter-box="movie-filter">
 <span class="material-symbols-outlined text-primary text-[20px]">movie</span>
-<select class="bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer" id="movie-filter">
+<select class="appearance-none bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer pr-6" id="movie-filter">
 <option value="">All movies</option>
 </select>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] absolute right-3 pointer-events-none">expand_more</span>
 </div>
 </div>
 <div class="flex flex-col gap-1 min-w-[160px] flex-1">
 <label class="font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant pl-1" for="chain-filter">Cinema Chain</label>
-<div class="flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors">
+<div class="filter-box relative flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors" data-filter-box="chain-filter">
 <span class="material-symbols-outlined text-primary text-[20px]">theaters</span>
-<select class="bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer" id="chain-filter">
+<select class="appearance-none bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer pr-6" id="chain-filter">
 <option value="">All chains</option>
 </select>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] absolute right-3 pointer-events-none">expand_more</span>
 </div>
 </div>
 <div class="flex flex-col gap-1 min-w-[160px] flex-1">
 <label class="font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant pl-1" for="venue-filter">Venue</label>
-<div class="flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors">
+<div class="filter-box relative flex items-center gap-2 bg-surface-container-high rounded-lg px-3 py-2.5 border border-transparent focus-within:border-primary-container transition-colors" data-filter-box="venue-filter">
 <span class="material-symbols-outlined text-primary text-[20px]">store</span>
-<select class="bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer" id="venue-filter">
+<select class="appearance-none bg-transparent border-none text-on-surface text-sm focus:outline-none focus:ring-0 w-full cursor-pointer pr-6" id="venue-filter">
 <option value="">All venues</option>
 </select>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] absolute right-3 pointer-events-none">expand_more</span>
 </div>
 </div>
 </div>
@@ -383,17 +386,34 @@ No groups match your filters — try clearing them, or start your own.
             btn.classList.toggle('flex', activeFilterCount > 0);
         }
 
+        // Gives each filter dropdown a visible "this one's active" state —
+        // a highlighted border/background tint — instead of every box
+        // looking identical whether or not it's actually narrowing results.
+        function updateFilterBoxStyles() {
+            document.querySelectorAll('[data-filter-box]').forEach(box => {
+                const select = document.getElementById(box.dataset.filterBox);
+                const active = !!select.value;
+                box.classList.toggle('border-primary-container', active);
+                box.classList.toggle('bg-primary-container/10', active);
+                box.classList.toggle('bg-surface-container-high', !active);
+            });
+        }
+
         function render() {
             const movieId = document.getElementById('movie-filter').value;
             const chain = document.getElementById('chain-filter').value;
             const venue = document.getElementById('venue-filter').value;
+            // Placeholder says "Search movies…" — this was previously
+            // (incorrectly) matching against the group's own name instead
+            // of the movie it's screening, so searching for an actual
+            // movie title returned nothing.
             const search = document.getElementById('search-input').value.trim().toLowerCase();
 
             let filtered = allGroups.filter(g => {
                 if (movieId && String(g.screening?.movie?.id) !== movieId) return false;
                 if (chain && chainOf(g.screening?.cinema) !== chain) return false;
                 if (venue && g.screening?.cinema !== venue) return false;
-                if (search && !g.name.toLowerCase().includes(search)) return false;
+                if (search && !(g.screening?.movie?.title || '').toLowerCase().includes(search)) return false;
                 return true;
             });
 
@@ -408,6 +428,7 @@ No groups match your filters — try clearing them, or start your own.
             }
             document.getElementById('results-count').textContent = filtered.length;
             updateClearFiltersVisibility([movieId, chain, venue, search].filter(Boolean).length);
+            updateFilterBoxStyles();
             wireCardHover();
         }
 
