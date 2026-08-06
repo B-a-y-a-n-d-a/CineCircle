@@ -52,7 +52,7 @@ router.get('/screenings', async (req, res, next) => {
 // touches source:'scraper' rows) never deletes it.
 router.post('/screenings', async (req, res, next) => {
   try {
-    const { movie_id, cinema, city, show_time, format } = req.body || {};
+    const { movie_id, cinema, city, show_time, format, screening_date } = req.body || {};
     if (!movie_id || !cinema || !city || !show_time) {
       return res.status(400).json({ error: 'movie_id, cinema, city, and show_time are required' });
     }
@@ -61,6 +61,7 @@ router.post('/screenings', async (req, res, next) => {
       .insert({
         movie_id, cinema, city, show_time,
         format: format || '2D',
+        screening_date: screening_date || null,
         source: 'manual',
       })
       .select('*, movie:movies(id, title)')
@@ -73,7 +74,7 @@ router.post('/screenings', async (req, res, next) => {
 // PATCH /api/admin/screenings/:id — edit any field of an existing showtime.
 router.patch('/screenings/:id', async (req, res, next) => {
   try {
-    const allowed = ['movie_id', 'cinema', 'city', 'show_time', 'format'];
+    const allowed = ['movie_id', 'cinema', 'city', 'show_time', 'format', 'screening_date'];
     const updates = {};
     for (const key of allowed) if (req.body?.[key] !== undefined) updates[key] = req.body[key];
     if (!Object.keys(updates).length) return res.status(400).json({ error: 'No valid fields to update' });

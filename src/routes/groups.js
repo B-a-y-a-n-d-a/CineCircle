@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../supabase.js';
 import { assertNotBanned } from '../middleware/requireAdmin.js';
+import { isUpcoming } from '../utils/dates.js';
 
 const router = Router();
 
@@ -23,6 +24,10 @@ router.get('/', async (req, res, next) => {
     const { data, error } = await query;
     if (error) throw error;
     let groups = data.map(shape);
+    // Hide groups built on a screening that's already happened — joining a
+    // watch party for a showtime in the past doesn't make sense, and these
+    // were cluttering the public browse grid.
+    groups = groups.filter((g) => isUpcoming(g.screening?.screening_date));
     if (req.query.city) groups = groups.filter((g) => g.screening?.city === req.query.city);
     if (req.query.movie_id) groups = groups.filter((g) => String(g.screening?.movie?.id) === String(req.query.movie_id));
     res.json(groups);

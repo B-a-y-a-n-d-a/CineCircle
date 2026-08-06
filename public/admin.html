@@ -106,7 +106,7 @@
 <!-- Manual fallback: add/edit/delete a showtime by hand -->
 <div class="glass-card rounded-2xl p-6 mb-6">
 <h2 class="font-title-md text-title-md mb-1">Manual Showtime Entry</h2>
-<p class="text-on-surface-variant text-sm mb-4">Use this if the scraper can't find a venue or a title — it won't get touched by the next scrape.</p>
+<p class="text-on-surface-variant text-sm mb-4">Use this if the scraper can't find a venue or a title — it won't get touched by the next scrape. Adding a new showtime? Pick one date and add as many times as that cinema is screening it — one submission creates all of them.</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
 <select class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-movie">
 <option value="">Select movie…</option>
@@ -125,11 +125,23 @@
 </select>
 <input class="hidden mt-2 w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-city-new" placeholder="New city name (e.g. Johannesburg)" type="text"/>
 </div>
-<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-format" placeholder="Format (default 2D)" type="text"/>
-<input class="sm:col-span-2 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-showtime" placeholder="Show time (e.g. Fri 8 Aug · 19:30)" type="text"/>
+<input class="bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-format" type="text" value="2D"/>
+<div>
+<label class="block font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant mb-1" for="sc-date">Date</label>
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none" id="sc-date" type="date"/>
+</div>
+</div>
+<div class="mb-4">
+<label class="block font-label-sm text-[10px] uppercase tracking-wider text-on-surface-variant mb-2">Showtimes on that date</label>
+<div class="space-y-2 mb-2" id="sc-times-inputs">
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none sc-time-input" type="time"/>
+</div>
+</div>
+<button class="text-secondary text-sm font-bold" id="sc-add-time-btn" type="button">+ Add another time</button>
 </div>
 <div class="flex items-center gap-3">
-<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="sc-add-btn">Add Showtime</button>
+<button class="px-6 py-3 rounded-lg bg-primary-container text-white font-bold hover:brightness-110 transition-all active:scale-95" id="sc-add-btn">Add Showtime(s)</button>
 <button class="hidden px-6 py-3 rounded-lg border border-white/10 text-on-surface-variant font-bold hover:bg-white/5 transition-all" id="sc-cancel-edit-btn" type="button">Cancel edit</button>
 </div>
 <p class="text-error text-sm hidden mt-3" id="sc-error"></p>
@@ -451,6 +463,41 @@
 
     document.getElementById('sc-filter').addEventListener('input', renderScreeningsList);
 
+    // Matches the display convention the scraper itself uses
+    // (src/scraper/index.js formatShowTime) so manually-added and
+    // scraped showtimes look identical to end users.
+    const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function formatShowTime(dateStr, timeStr) {
+        // Parse "YYYY-MM-DD" via explicit components rather than
+        // `new Date(dateStr)` — the latter treats a bare date string as UTC
+        // midnight, which can silently roll over to the wrong local day.
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]} · ${timeStr}`;
+    }
+
+    function resetTimesInputs(prefill) {
+        const container = document.getElementById('sc-times-inputs');
+        container.innerHTML = `<div class="flex gap-2">
+            <input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none sc-time-input" type="time" value="${prefill || ''}"/>
+        </div>`;
+    }
+
+    function addTimeInputRow() {
+        const container = document.getElementById('sc-times-inputs');
+        const row = document.createElement('div');
+        row.className = 'flex gap-2';
+        row.innerHTML = `<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary-container outline-none sc-time-input" type="time"/>
+            <button class="px-3 rounded-lg border border-white/10 text-on-surface-variant" type="button" onclick="this.parentElement.remove()">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>`;
+        container.appendChild(row);
+    }
+
+    document.getElementById('sc-add-time-btn').addEventListener('click', addTimeInputRow);
+
     function resetScreeningForm() {
         editingScreeningId = null;
         document.getElementById('sc-movie').value = '';
@@ -460,9 +507,11 @@
         document.getElementById('sc-city-select').value = '';
         document.getElementById('sc-city-new').value = '';
         document.getElementById('sc-city-new').classList.add('hidden');
-        document.getElementById('sc-format').value = '';
-        document.getElementById('sc-showtime').value = '';
-        document.getElementById('sc-add-btn').textContent = 'Add Showtime';
+        document.getElementById('sc-format').value = '2D';
+        document.getElementById('sc-date').value = '';
+        resetTimesInputs();
+        document.getElementById('sc-add-time-btn').classList.remove('hidden');
+        document.getElementById('sc-add-btn').textContent = 'Add Showtime(s)';
         document.getElementById('sc-cancel-edit-btn').classList.add('hidden');
     }
 
@@ -472,6 +521,10 @@
     // (from the onclick attribute), so compare as strings — this is the fix
     // for Edit previously silently doing nothing (`x.id === id` was
     // comparing a number to a string and never matching).
+    //
+    // Editing is always a single existing row, so — unlike Add, which
+    // supports several times at once — this shows exactly one time input
+    // and hides "+ Add another time".
     window.editScreening = function (id) {
         const s = allScreenings.find(x => String(x.id) === String(id));
         if (!s) return;
@@ -479,8 +532,13 @@
         document.getElementById('sc-movie').value = s.movie_id || '';
         setSelectOrNew('sc-cinema-select', 'sc-cinema-new', s.cinema || '');
         setSelectOrNew('sc-city-select', 'sc-city-new', s.city || '');
-        document.getElementById('sc-format').value = s.format || '';
-        document.getElementById('sc-showtime').value = s.show_time || '';
+        document.getElementById('sc-format').value = s.format || '2D';
+        document.getElementById('sc-date').value = s.screening_date || '';
+        // show_time is stored as a formatted display string (e.g. "Wed 5
+        // Aug · 19:30") — pull just the time back out for the time input.
+        const timeMatch = (s.show_time || '').match(/(\d{1,2}:\d{2})\s*$/);
+        resetTimesInputs(timeMatch ? timeMatch[1] : '');
+        document.getElementById('sc-add-time-btn').classList.add('hidden');
         document.getElementById('sc-add-btn').textContent = 'Save Changes';
         document.getElementById('sc-cancel-edit-btn').classList.remove('hidden');
         document.getElementById('sc-movie').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -523,25 +581,41 @@
         const successEl = document.getElementById('sc-success');
         errorEl.classList.add('hidden'); successEl.classList.add('hidden');
 
-        const body = {
-            movie_id: document.getElementById('sc-movie').value,
-            cinema: resolveSelectValue('sc-cinema-select', 'sc-cinema-new'),
-            city: resolveSelectValue('sc-city-select', 'sc-city-new'),
-            show_time: document.getElementById('sc-showtime').value.trim(),
-            format: document.getElementById('sc-format').value.trim() || '2D',
-        };
-        if (!body.movie_id || !body.cinema || !body.city || !body.show_time) {
-            errorEl.textContent = 'Movie, cinema, city, and show time are all required.';
+        const movie_id = document.getElementById('sc-movie').value;
+        const cinema = resolveSelectValue('sc-cinema-select', 'sc-cinema-new');
+        const city = resolveSelectValue('sc-city-select', 'sc-city-new');
+        const format = document.getElementById('sc-format').value.trim() || '2D';
+        const date = document.getElementById('sc-date').value;
+        const times = [...document.querySelectorAll('.sc-time-input')].map(i => i.value).filter(Boolean);
+
+        if (!movie_id || !cinema || !city || !date || !times.length) {
+            errorEl.textContent = 'Movie, cinema, city, date, and at least one time are all required.';
             errorEl.classList.remove('hidden');
             return;
         }
+
+        const addBtn = document.getElementById('sc-add-btn');
+        addBtn.disabled = true;
         try {
             if (editingScreeningId) {
-                await adminApi(`/screenings/${editingScreeningId}`, { method: 'PATCH', body });
+                // Editing is always exactly one row/one time.
+                await adminApi(`/screenings/${editingScreeningId}`, {
+                    method: 'PATCH',
+                    body: { movie_id, cinema, city, format, screening_date: date, show_time: formatShowTime(date, times[0]) },
+                });
                 successEl.textContent = 'Showtime updated!';
             } else {
-                await adminApi('/screenings', { method: 'POST', body });
-                successEl.textContent = 'Showtime added!';
+                // Add mode: one POST per time, all sharing the same
+                // movie/cinema/city/date/format — this is what turns "type
+                // the whole form out per showtime" into "type it once, add
+                // every time slot that cinema is screening it".
+                for (const time of times) {
+                    await adminApi('/screenings', {
+                        method: 'POST',
+                        body: { movie_id, cinema, city, format, screening_date: date, show_time: formatShowTime(date, time) },
+                    });
+                }
+                successEl.textContent = `Added ${times.length} showtime${times.length === 1 ? '' : 's'}!`;
             }
             successEl.classList.remove('hidden');
             resetScreeningForm();
@@ -549,6 +623,8 @@
         } catch (err) {
             errorEl.textContent = err.message;
             errorEl.classList.remove('hidden');
+        } finally {
+            addBtn.disabled = false;
         }
     });
 

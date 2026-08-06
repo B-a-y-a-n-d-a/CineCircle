@@ -4,10 +4,10 @@
 -- Menlyn Park / Hyde Park / Clearwater / Emperors Palace already have real
 -- scraped data from earlier testing, so they're left alone here.
 
-insert into screenings (cinema, city, show_time, format, movie_id, source)
-select v.cinema, v.city, 'Showtime pending — check back after the scraper runs', 'TBC',
+insert into screenings (cinema, city, show_time, format, movie_id, source, screening_date)
+select v.cinema, v.city, 'Showtime pending — check back after the scraper runs', '2D',
   (select id from movies order by created_at asc limit 1),
-  'manual'
+  'manual', current_date + 1
 from (values
   ('Nu Metro Bedford',   'Bedfordview'),
   ('Nu Metro The Glen',  'Johannesburg'),

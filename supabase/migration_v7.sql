@@ -3,23 +3,23 @@
 -- right away — instead of waiting on the scraper to successfully run
 -- against each one first.
 --
--- These are tagged source = 'manual' with an obvious placeholder
--- show_time/format, so:
---   - they're clearly not real showtimes to anyone browsing,
+-- These are tagged source = 'manual' with an obvious placeholder show_time
+-- and format '2D' (matching the rest of the app for now — see
+-- migration_v9.sql for the cleanup of the earlier 'TBC' placeholder value),
+-- so:
 --   - the scraper's own stale-row cleanup (which only ever touches
 --     source = 'scraper' rows) will never delete them,
 --   - and once the scraper successfully finds real showtimes for a venue,
 --     those will appear as separate, additional rows alongside the
---     placeholder (they won't collide/merge with it, since screening_date
---     is left null here).
+--     placeholder rather than colliding with it (different screening_date).
 --
--- Once a venue has real scraped showtimes, delete its "TBC" placeholder
--- from Admin -> Showtimes -> All Showtimes (look for format = 'TBC').
+-- Once a venue has real scraped showtimes, delete its placeholder from
+-- Admin -> Showtimes -> All Showtimes (look for "Showtime pending").
 
-insert into screenings (cinema, city, show_time, format, movie_id, source)
-select v.cinema, v.city, 'Showtime pending — check back after the scraper runs', 'TBC',
+insert into screenings (cinema, city, show_time, format, movie_id, source, screening_date)
+select v.cinema, v.city, 'Showtime pending — check back after the scraper runs', '2D',
   (select id from movies order by created_at asc limit 1),
-  'manual'
+  'manual', current_date + 1
 from (values
   ('Ster-Kinekor Cresta',              'Johannesburg'),
   ('Ster-Kinekor Fourways',            'Johannesburg'),
