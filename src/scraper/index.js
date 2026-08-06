@@ -121,6 +121,20 @@ export async function runScrape({ triggeredBy } = {}) {
 
     await browser.close();
 
+    // De-dupe on the same key the upsert's onConflict target uses, before
+    // upserting. A single cinema page sometimes lists the identical time
+    // slot twice (e.g. two ticket types/halls at the same time) — harmless
+    // on its own, but Postgres's ON CONFLICT DO UPDATE refuses to touch the
+    // same conflict-target row twice within one batch ("ON CONFLICT DO
+    // UPDATE command cannot affect row a second time"), which previously
+    // crashed the *entire* run at the very last step — after successfully
+    // scraping every venue — losing all of that run's results. Keeping the
+    // last-seen row per key is fine here since duplicates are, by
+    // definition, describing the same movie/cinema/date/time.
+    const dedupedRows = [...new Map(
+      newRows.map((r) => [`${r.movie_id}|${r.cinema}|${r.screening_date}|${r.show_time}`, r])
+    ).values()];
+
     // Upsert, not delete-then-insert: a group's screening_id needs to keep
     // pointing at the same row across scrapes, or `groups.screening_id
     // references screenings(id) on delete cascade` would silently delete
@@ -128,20 +142,20 @@ export async function runScrape({ triggeredBy } = {}) {
     // though the showtime itself hasn't changed. Matching on
     // (movie_id, cinema, screening_date, show_time) — see migration_v5.sql
     // — means an unchanged showtime keeps its id forever.
-    if (newRows.length) {
+    if (dedupedRows.length) {
       const { error: upsertErr } = await supabase
         .from('screenings')
-        .upsert(newRows, { onConflict: 'movie_id,cinema,screening_date,show_time' });
+        .upsert(dedupedRows, { onConflict: 'movie_id,cinema,screening_date,show_time' });
       if (upsertErr) throw upsertErr;
     }
-    summary.screeningsFound = newRows.length;
+    summary.screeningsFound = dedupedRows.length;
 
     // Clean up showtimes that are no longer being offered (e.g. a screening
     // got cancelled) — but only if nobody has built a group on it. A
     // showtime with an active group stays in the table even after it drops
     // out of the site's listing, rather than cascade-deleting that group.
     const windowDates = Array.from({ length: DAYS_AHEAD }, (_, i) => isoDate(dateAt(i)));
-    const newKeys = new Set(newRows.map((r) => `${r.movie_id}|${r.cinema}|${r.screening_date}|${r.show_time}`));
+    const newKeys = new Set(dedupedRows.map((r) => `${r.movie_id}|${r.cinema}|${r.screening_date}|${r.show_time}`));
 
     const { data: existingScraperRows, error: existingErr } = await supabase
       .from('screenings')
