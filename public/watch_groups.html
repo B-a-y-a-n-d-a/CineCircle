@@ -429,8 +429,17 @@ No groups match your filters — try clearing them, or start your own.
             const m = allMovies[index];
             if (!m) return;
             heroIndex = index;
+            // bg-cover crops to fill the banner on any screen size — the
+            // one thing worth tuning is *where* it crops from. The banner
+            // itself is short-and-wide on a laptop (h-[60vh] but very
+            // wide) and closer to the poster's own portrait shape on
+            // mobile, so a plain center crop loses the top of a tall
+            // theatrical poster (where the title/faces usually are) most
+            // aggressively on wide screens. Biasing the vertical anchor
+            // toward the top third is a safe default for typical poster
+            // compositions across laptop, tablet, and mobile alike.
             document.getElementById('hero-slides').innerHTML =
-                `<div class="w-full h-full bg-cover bg-center transition-opacity duration-700" style="background-image:url('${m.poster_url}')"></div>`;
+                `<div class="w-full h-full bg-cover bg-no-repeat transition-opacity duration-700" style="background-image:url('${m.poster_url}');background-position:center 20%;"></div>`;
             document.getElementById('hero-title').textContent = m.title;
             document.getElementById('hero-genre').textContent = m.genre;
             document.getElementById('hero-runtime').textContent = m.runtime_minutes ? `${m.runtime_minutes} min` : '';

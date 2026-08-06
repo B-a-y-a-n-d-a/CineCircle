@@ -586,7 +586,8 @@
         const city = resolveSelectValue('sc-city-select', 'sc-city-new');
         const format = document.getElementById('sc-format').value.trim() || '2D';
         const date = document.getElementById('sc-date').value;
-        const times = [...document.querySelectorAll('.sc-time-input')].map(i => i.value).filter(Boolean);
+        // De-duped, in case the same time got typed into two rows by accident.
+        const times = [...new Set([...document.querySelectorAll('.sc-time-input')].map(i => i.value).filter(Boolean))];
 
         if (!movie_id || !cinema || !city || !date || !times.length) {
             errorEl.textContent = 'Movie, cinema, city, date, and at least one time are all required.';
@@ -596,6 +597,7 @@
 
         const addBtn = document.getElementById('sc-add-btn');
         addBtn.disabled = true;
+        let added = 0;
         try {
             if (editingScreeningId) {
                 // Editing is always exactly one row/one time.
@@ -608,21 +610,29 @@
                 // Add mode: one POST per time, all sharing the same
                 // movie/cinema/city/date/format — this is what turns "type
                 // the whole form out per showtime" into "type it once, add
-                // every time slot that cinema is screening it".
+                // every time slot that cinema is screening it". If one
+                // fails partway through (e.g. a duplicate), the ones before
+                // it already succeeded — report that honestly rather than
+                // a generic error, and refresh the list either way so the
+                // successful ones actually show up without a manual reload.
                 for (const time of times) {
                     await adminApi('/screenings', {
                         method: 'POST',
                         body: { movie_id, cinema, city, format, screening_date: date, show_time: formatShowTime(date, time) },
                     });
+                    added += 1;
                 }
-                successEl.textContent = `Added ${times.length} showtime${times.length === 1 ? '' : 's'}!`;
+                successEl.textContent = `Added ${added} showtime${added === 1 ? '' : 's'}!`;
             }
             successEl.classList.remove('hidden');
             resetScreeningForm();
             await loadScreenings();
         } catch (err) {
-            errorEl.textContent = err.message;
+            errorEl.textContent = added > 0
+                ? `Added ${added} of ${times.length} before this error: ${err.message}`
+                : err.message;
             errorEl.classList.remove('hidden');
+            await loadScreenings();
         } finally {
             addBtn.disabled = false;
         }
